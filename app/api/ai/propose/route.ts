@@ -2,72 +2,78 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { adminClient } from "@/lib/supabase/admin"
 import { callClaude } from "@/lib/ai/client"
-import {
-  PROPOSE_KPI_SYSTEM,
-  buildProposeKpiPrompt,
-} from "@/lib/ai/prompts/propose-kpis"
+import { PROPOSE_KPI_SYSTEM, buildProposeKpiPrompt } from "@/lib/ai/prompts/propose-kpis"
 import type { ColumnMetadata, ProposedKpi } from "@/lib/types"
 
 export async function POST(request: Request) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  const { data: { user }, error: authErr } = await supabase.auth.getUser()
+  if (authErr || !user) {
+    return NextResponse.json({ error: `[propose-auth] ${authErr?.message}` }, { status: 401 })
+  }
 
-  const { dataset_id, workspace_id } = await request.json()
+  let body: { dataset_id?: string; workspace_id?: string }
+  try {
+    body = await request.json()
+  } catch (e) {
+    return NextResponse.json({ error: `[propose-body] ${e}` }, { status: 400 })
+  }
+
+  const { dataset_id, workspace_id } = body
+  if (!dataset_id || !workspace_id) {
+    return NextResponse.json({ error: `[propose-missing]` }, { status: 400 })
+  }
 
   // Verify membership
-  const { data: membership } = await supabase
+  const { data: membership, error: memberErr } = await supabase
     .from("workspace_members")
     .select("role")
     .eq("workspace_id", workspace_id)
     .eq("user_id", user.id)
-    .single()
-  if (!membership) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    .maybeSingle()
+  if (memberErr) return NextResponse.json({ error: `[propose-member-err] ${memberErr.message}` }, { status: 500 })
+  if (!membership) return NextResponse.json({ error: `[propose-no-member]` }, { status: 403 })
 
-  // Fetch workspace + dataset
-  const [{ data: workspace }, { data: dataset }] = await Promise.all([
-    adminClient.from("workspaces").select("schema_name, industry, primary_currency").eq("id", workspace_id).single(),
-    adminClient.from("datasets").select("*").eq("id", dataset_id).eq("workspace_id", workspace_id).single(),
+  const [{ data: workspace, error: wsErr }, { data: dataset, error: dsErr }] = await Promise.all([
+    adminClient.from("workspaces").select("schema_name, industry, primary_currency").eq("id", workspace_id).maybeSingle(),
+    adminClient.from("datasets").select("*").eq("id", dataset_id).eq("workspace_id", workspace_id).maybeSingle(),
   ])
 
-  if (!workspace || !dataset) {
-    return NextResponse.json({ error: "Workspace or dataset not found" }, { status: 404 })
-  }
+  if (wsErr) return NextResponse.json({ error: `[propose-ws-err] ${wsErr.message}` }, { status: 500 })
+  if (dsErr) return NextResponse.json({ error: `[propose-ds-err] ${dsErr.message}` }, { status: 500 })
+  if (!workspace) return NextResponse.json({ error: `[propose-ws-missing]` }, { status: 404 })
+  if (!dataset) return NextResponse.json({ error: `[propose-ds-missing]` }, { status: 404 })
+  if (!dataset.ai_description) return NextResponse.json({ error: `[propose-not-parsed]` }, { status: 400 })
 
-  if (!dataset.ai_description) {
-    return NextResponse.json(
-      { error: "Dataset must be parsed by AI before proposing KPIs" },
-      { status: 400 }
+  const columns = (dataset.column_metadata ?? []) as ColumnMetadata[]
+
+  let rawResponse: string
+  try {
+    rawResponse = await callClaude(
+      PROPOSE_KPI_SYSTEM,
+      buildProposeKpiPrompt({
+        datasetName: dataset.name,
+        datasetDescription: dataset.ai_description,
+        schemaName: workspace.schema_name,
+        tableName: dataset.table_name,
+        columns,
+        industry: workspace.industry,
+        currency: workspace.primary_currency,
+      }),
+      { model: "claude-sonnet-4-6", endpoint: "propose-kpis", workspaceId: workspace_id, maxTokens: 1024 }
     )
+  } catch (e) {
+    return NextResponse.json({ error: `[propose-claude] ${e}` }, { status: 500 })
   }
-
-  const columns = dataset.column_metadata as ColumnMetadata[]
-
-  const userMessage = buildProposeKpiPrompt({
-    datasetName: dataset.name,
-    datasetDescription: dataset.ai_description,
-    schemaName: workspace.schema_name,
-    tableName: dataset.table_name,
-    columns,
-    industry: workspace.industry,
-    currency: workspace.primary_currency,
-  })
-
-  const rawResponse = await callClaude(PROPOSE_KPI_SYSTEM, userMessage, {
-    endpoint: "propose-kpis",
-    workspaceId: workspace_id,
-    maxTokens: 1024,
-  })
 
   let proposed: ProposedKpi
   try {
     proposed = JSON.parse(rawResponse)
   } catch {
-    return NextResponse.json({ error: "AI returned invalid JSON", raw: rawResponse }, { status: 500 })
+    return NextResponse.json({ error: `[propose-json] raw=${rawResponse.slice(0, 200)}` }, { status: 500 })
   }
 
-  // Save the proposal
-  const { data: kpi } = await adminClient
+  const { data: kpi, error: kpiErr } = await adminClient
     .from("kpi_proposals")
     .insert({
       workspace_id,
@@ -79,6 +85,7 @@ export async function POST(request: Request) {
     })
     .select()
     .single()
+  if (kpiErr) return NextResponse.json({ error: `[propose-kpi-insert] ${kpiErr.message}` }, { status: 500 })
 
   return NextResponse.json({ kpi })
 }
