@@ -61,6 +61,7 @@ export async function POST(request: Request) {
   )
 
   const rawResponse = await callClaude(PARSE_DATASET_SYSTEM, userMessage, {
+    model: "claude-haiku-4-5",
     endpoint: "parse-dataset",
     workspaceId: workspace_id,
     maxTokens: 1024,
