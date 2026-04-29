@@ -61,36 +61,37 @@ export async function POST(request: Request) {
     .maybeSingle()
   if (existing) tableName = `${tableName}_${Date.now()}`
 
-  // Create the table in the workspace schema
+  // Create the table in the workspace schema via exec_sql RPC
   const createSQL = buildCreateTableSQL(schemaName, tableName, parsed.columnMetadata)
   const { error: createErr } = await adminClient.rpc("exec_sql", { sql: createSQL })
   if (createErr) {
-    // Fallback: use raw connection approach via admin
-    // The exec_sql function may not exist yet — create table via pg_query workaround
     return NextResponse.json(
       { error: `Table creation failed: ${createErr.message}` },
       { status: 500 }
     )
   }
 
-  // Bulk insert rows (batches of 500)
+  // Bulk insert rows via exec_sql (batches of 100 to stay under RPC payload limits)
   const columns: ColumnMetadata[] = parsed.columnMetadata
-  const BATCH = 500
+  const BATCH = 100
   for (let i = 0; i < parsed.rows.length; i += BATCH) {
     const batch = parsed.rows.slice(i, i + BATCH)
-    const insertRows = batch.map((row) => {
-      const obj: Record<string, unknown> = {}
-      rowToValues(row, columns).forEach((val, idx) => {
-        obj[columns[idx].name] = val
+
+    // Build a multi-row INSERT with escaped values
+    const colList = columns.map((c) => `"${c.name}"`).join(", ")
+    const valueClauses = batch.map((row) => {
+      const vals = rowToValues(row, columns).map((v) => {
+        if (v === null) return "NULL"
+        if (typeof v === "boolean") return v ? "TRUE" : "FALSE"
+        if (typeof v === "number") return String(v)
+        // Escape single quotes in strings
+        return `'${String(v).replace(/'/g, "''")}'`
       })
-      return obj
+      return `(${vals.join(", ")})`
     })
 
-    const { error: insertErr } = await adminClient
-      .schema(schemaName as "public")
-      .from(tableName)
-      .insert(insertRows)
-
+    const insertSQL = `INSERT INTO "${schemaName}"."${tableName}" (${colList}) VALUES ${valueClauses.join(",\n")}`
+    const { error: insertErr } = await adminClient.rpc("exec_sql", { sql: insertSQL })
     if (insertErr) {
       return NextResponse.json(
         { error: `Row insert failed: ${insertErr.message}` },
