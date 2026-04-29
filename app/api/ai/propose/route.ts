@@ -5,6 +5,8 @@ import { callClaude } from "@/lib/ai/client"
 import { PROPOSE_KPI_SYSTEM, buildProposeKpiPrompt } from "@/lib/ai/prompts/propose-kpis"
 import type { ColumnMetadata, ProposedKpi } from "@/lib/types"
 
+const MOCK_AI = process.env.MOCK_AI === "true"
+
 export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user }, error: authErr } = await supabase.auth.getUser()
@@ -24,7 +26,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `[propose-missing]` }, { status: 400 })
   }
 
-  // Verify membership
   const { data: membership, error: memberErr } = await supabase
     .from("workspace_members")
     .select("role")
@@ -47,30 +48,48 @@ export async function POST(request: Request) {
 
   const columns = (dataset.column_metadata ?? []) as ColumnMetadata[]
 
-  let rawResponse: string
-  try {
-    rawResponse = await callClaude(
-      PROPOSE_KPI_SYSTEM,
-      buildProposeKpiPrompt({
-        datasetName: dataset.name,
-        datasetDescription: dataset.ai_description,
-        schemaName: workspace.schema_name,
-        tableName: dataset.table_name,
-        columns,
-        industry: workspace.industry,
-        currency: workspace.primary_currency,
-      }),
-      { model: "claude-3-5-sonnet-20241022", endpoint: "propose-kpis", workspaceId: workspace_id, maxTokens: 1024 }
-    )
-  } catch (e) {
-    return NextResponse.json({ error: `[propose-claude] ${e}` }, { status: 500 })
-  }
-
   let proposed: ProposedKpi
-  try {
-    proposed = JSON.parse(rawResponse)
-  } catch {
-    return NextResponse.json({ error: `[propose-json] raw=${rawResponse.slice(0, 200)}` }, { status: 500 })
+
+  if (MOCK_AI) {
+    // Mock KPI for testing — uses the actual table/schema name so SQL is realistic
+    const dateCol = columns.find((c) => c.sql_type === "DATE" || c.ai_inferred_type?.includes("date"))
+    const revenueCol = columns.find((c) => c.ai_inferred_type?.includes("revenue") || c.ai_inferred_type?.includes("amount") || c.sql_type === "NUMERIC")
+    proposed = {
+      name: "Monthly Revenue Trend",
+      description: "Total revenue grouped by month — the single most important metric for understanding whether your business is growing, flat, or declining.",
+      proposed_sql: `SELECT
+  date_trunc('month', "${dateCol?.name ?? "date"}")::date AS month,
+  SUM("${revenueCol?.name ?? "revenue"}") AS total_revenue
+FROM "${workspace.schema_name}"."${dataset.table_name}"
+GROUP BY 1
+ORDER BY 1`,
+      chart_type: "line",
+    }
+  } else {
+    let rawResponse: string
+    try {
+      rawResponse = await callClaude(
+        PROPOSE_KPI_SYSTEM,
+        buildProposeKpiPrompt({
+          datasetName: dataset.name,
+          datasetDescription: dataset.ai_description,
+          schemaName: workspace.schema_name,
+          tableName: dataset.table_name,
+          columns,
+          industry: workspace.industry,
+          currency: workspace.primary_currency,
+        }),
+        { model: "claude-3-5-sonnet-20241022", endpoint: "propose-kpis", workspaceId: workspace_id, maxTokens: 1024 }
+      )
+    } catch (e) {
+      return NextResponse.json({ error: `[propose-claude] ${e}` }, { status: 500 })
+    }
+
+    try {
+      proposed = JSON.parse(rawResponse)
+    } catch {
+      return NextResponse.json({ error: `[propose-json] raw=${rawResponse.slice(0, 200)}` }, { status: 500 })
+    }
   }
 
   const { data: kpi, error: kpiErr } = await adminClient

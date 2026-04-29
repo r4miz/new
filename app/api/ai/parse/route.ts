@@ -7,6 +7,9 @@ import {
   buildParseDatasetPrompt,
 } from "@/lib/ai/prompts/parse-dataset"
 
+// Set MOCK_AI=true in Vercel env vars to bypass Anthropic while testing
+const MOCK_AI = process.env.MOCK_AI === "true"
+
 export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user }, error: authErr } = await supabase.auth.getUser()
@@ -23,10 +26,9 @@ export async function POST(request: Request) {
 
   const { dataset_id, workspace_id } = body
   if (!dataset_id || !workspace_id) {
-    return NextResponse.json({ error: `[parse-missing] dataset_id=${dataset_id} workspace_id=${workspace_id}` }, { status: 400 })
+    return NextResponse.json({ error: `[parse-missing]` }, { status: 400 })
   }
 
-  // Verify membership
   const { data: membership, error: memberErr } = await supabase
     .from("workspace_members")
     .select("role")
@@ -34,9 +36,8 @@ export async function POST(request: Request) {
     .eq("user_id", user.id)
     .maybeSingle()
   if (memberErr) return NextResponse.json({ error: `[parse-member-err] ${memberErr.message}` }, { status: 500 })
-  if (!membership) return NextResponse.json({ error: `[parse-no-member] ws=${workspace_id}` }, { status: 403 })
+  if (!membership) return NextResponse.json({ error: `[parse-no-member]` }, { status: 403 })
 
-  // Fetch dataset
   const { data: dataset, error: dsErr } = await adminClient
     .from("datasets")
     .select("*")
@@ -50,31 +51,47 @@ export async function POST(request: Request) {
     name: string; original_name: string; sql_type: string; sample_values: string[]
   }>
 
-  const headers = columns.map((c) => c.original_name)
-  const sampleRows: Record<string, string>[] = []
-  const sampleCount = columns[0]?.sample_values?.length ?? 0
-  for (let i = 0; i < sampleCount; i++) {
-    const row: Record<string, string> = {}
-    columns.forEach((c) => { row[c.original_name] = c.sample_values[i] ?? "" })
-    sampleRows.push(row)
-  }
+  let aiResult: { columns: Array<{ original_name: string; ai_inferred_type: string }>; description: string }
 
-  let rawResponse: string
-  try {
-    rawResponse = await callClaude(
-      PARSE_DATASET_SYSTEM,
-      buildParseDatasetPrompt(dataset.original_filename ?? dataset.name, headers, sampleRows),
-      { model: "claude-3-5-haiku-20241022", endpoint: "parse-dataset", workspaceId: workspace_id, maxTokens: 1024 }
-    )
-  } catch (e) {
-    return NextResponse.json({ error: `[parse-claude] ${e}` }, { status: 500 })
-  }
+  if (MOCK_AI) {
+    // Mock response for testing without Anthropic credits
+    aiResult = {
+      columns: columns.map((c) => ({
+        original_name: c.original_name,
+        ai_inferred_type: c.name.includes("date") ? "transaction date"
+          : c.name.includes("revenue") || c.name.includes("amount") ? "revenue amount in USD"
+          : c.name.includes("client") || c.name.includes("name") ? "client or customer name"
+          : c.name.includes("status") ? "status or category"
+          : "business metric",
+      })),
+      description: `This dataset contains ${dataset.row_count ?? "multiple"} records of business data from ${dataset.original_filename ?? dataset.name}. It can be used to track performance trends, identify top contributors, and analyze business patterns over time.`,
+    }
+  } else {
+    const headers = columns.map((c) => c.original_name)
+    const sampleRows: Record<string, string>[] = []
+    const sampleCount = columns[0]?.sample_values?.length ?? 0
+    for (let i = 0; i < sampleCount; i++) {
+      const row: Record<string, string> = {}
+      columns.forEach((c) => { row[c.original_name] = c.sample_values[i] ?? "" })
+      sampleRows.push(row)
+    }
 
-  let aiResult: { columns: Array<{ original_name: string; ai_inferred_type: string; sql_type: string }>; description: string }
-  try {
-    aiResult = JSON.parse(rawResponse)
-  } catch {
-    return NextResponse.json({ error: `[parse-json] raw=${rawResponse.slice(0, 200)}` }, { status: 500 })
+    let rawResponse: string
+    try {
+      rawResponse = await callClaude(
+        PARSE_DATASET_SYSTEM,
+        buildParseDatasetPrompt(dataset.original_filename ?? dataset.name, headers, sampleRows),
+        { model: "claude-3-5-haiku-20241022", endpoint: "parse-dataset", workspaceId: workspace_id, maxTokens: 1024 }
+      )
+    } catch (e) {
+      return NextResponse.json({ error: `[parse-claude] ${e}` }, { status: 500 })
+    }
+
+    try {
+      aiResult = JSON.parse(rawResponse)
+    } catch {
+      return NextResponse.json({ error: `[parse-json] raw=${rawResponse.slice(0, 200)}` }, { status: 500 })
+    }
   }
 
   const updatedColumns = columns.map((col) => {
