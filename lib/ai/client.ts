@@ -5,8 +5,8 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 // Pricing per 1M tokens (USD) — update when Anthropic changes rates
 const PRICING: Record<string, { input: number; output: number }> = {
-  "claude-sonnet-4-5": { input: 3.0, output: 15.0 },
-  "claude-haiku-4-5": { input: 0.25, output: 1.25 },
+  "claude-3-5-sonnet-20241022": { input: 3.0, output: 15.0 },
+  "claude-3-5-haiku-20241022": { input: 0.8, output: 4.0 },
 }
 
 export interface AiCallOptions {

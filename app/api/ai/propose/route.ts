@@ -60,7 +60,7 @@ export async function POST(request: Request) {
         industry: workspace.industry,
         currency: workspace.primary_currency,
       }),
-      { model: "claude-sonnet-4-6", endpoint: "propose-kpis", workspaceId: workspace_id, maxTokens: 1024 }
+      { model: "claude-3-5-sonnet-20241022", endpoint: "propose-kpis", workspaceId: workspace_id, maxTokens: 1024 }
     )
   } catch (e) {
     return NextResponse.json({ error: `[propose-claude] ${e}` }, { status: 500 })
