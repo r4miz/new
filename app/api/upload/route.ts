@@ -61,9 +61,9 @@ export async function POST(request: Request) {
     .maybeSingle()
   if (existing) tableName = `${tableName}_${Date.now()}`
 
-  // Create the table in the workspace schema via exec_sql RPC
+  // Create the table in the workspace schema via bizintel_exec_sql RPC
   const createSQL = buildCreateTableSQL(schemaName, tableName, parsed.columnMetadata)
-  const { error: createErr } = await adminClient.rpc("exec_sql", { sql: createSQL })
+  const { error: createErr } = await adminClient.rpc("bizintel_exec_sql", { sql: createSQL })
   if (createErr) {
     return NextResponse.json(
       { error: `Table creation failed: ${createErr.message}` },
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     )
   }
 
-  // Bulk insert rows via exec_sql (batches of 100 to stay under RPC payload limits)
+  // Bulk insert rows via bizintel_exec_sql (batches of 100 to stay under RPC payload limits)
   const columns: ColumnMetadata[] = parsed.columnMetadata
   const BATCH = 100
   for (let i = 0; i < parsed.rows.length; i += BATCH) {
@@ -91,7 +91,7 @@ export async function POST(request: Request) {
     })
 
     const insertSQL = `INSERT INTO "${schemaName}"."${tableName}" (${colList}) VALUES ${valueClauses.join(",\n")}`
-    const { error: insertErr } = await adminClient.rpc("exec_sql", { sql: insertSQL })
+    const { error: insertErr } = await adminClient.rpc("bizintel_exec_sql", { sql: insertSQL })
     if (insertErr) {
       return NextResponse.json(
         { error: `Row insert failed: ${insertErr.message}` },

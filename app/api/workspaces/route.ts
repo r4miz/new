@@ -24,6 +24,10 @@ export async function POST(request: Request) {
 
   const { name, industry, size, primary_currency } = parsed.data
 
+  // Generate the workspace ID upfront so we can derive schema_name in one step
+  const workspaceId = crypto.randomUUID()
+  const schemaName = workspaceSchemaName(workspaceId)
+
   // Generate a unique slug
   const baseSlug = slugify(name) || "workspace"
   let slug = baseSlug
@@ -39,47 +43,36 @@ export async function POST(request: Request) {
     slug = `${baseSlug}-${attempt}`
   }
 
-  // Workspace row
+  // Create the Postgres schema first (so if it fails, we don't create a workspace row)
+  const { error: schemaError } = await adminClient.rpc(
+    "create_workspace_schema",
+    { p_schema_name: schemaName }
+  )
+  if (schemaError) {
+    return NextResponse.json(
+      { error: `Failed to create workspace schema: ${schemaError.message}` },
+      { status: 500 }
+    )
+  }
+
+  // Insert workspace row with the known ID and schema_name
   const { data: workspace, error: wsError } = await adminClient
     .from("workspaces")
     .insert({
+      id: workspaceId,
       name,
       slug,
       industry: industry ?? null,
       size: size ?? null,
       primary_currency,
       owner_id: user.id,
-      schema_name: workspaceSchemaName(
-        // We need the ID, so insert first then create schema
-        "placeholder"
-      ),
+      schema_name: schemaName,
     })
     .select()
     .single()
 
-  // We need the real ID for the schema name — do it in two steps
-  const workspaceId = workspace?.id
-  if (wsError || !workspaceId) {
-    return NextResponse.json({ error: "Failed to create workspace" }, { status: 500 })
-  }
-
-  const schemaName = workspaceSchemaName(workspaceId)
-
-  // Update the schema_name with the real ID
-  await adminClient
-    .from("workspaces")
-    .update({ schema_name: schemaName })
-    .eq("id", workspaceId)
-
-  // Create the Postgres schema via the DB function (SECURITY DEFINER)
-  const { error: schemaError } = await adminClient.rpc(
-    "create_workspace_schema",
-    { p_schema_name: schemaName }
-  )
-  if (schemaError) {
-    // Roll back workspace creation if schema fails
-    await adminClient.from("workspaces").delete().eq("id", workspaceId)
-    return NextResponse.json({ error: "Failed to create workspace schema" }, { status: 500 })
+  if (wsError || !workspace) {
+    return NextResponse.json({ error: `Failed to create workspace: ${wsError?.message}` }, { status: 500 })
   }
 
   // Add owner as member
@@ -90,5 +83,5 @@ export async function POST(request: Request) {
     accepted_at: new Date().toISOString(),
   })
 
-  return NextResponse.json({ workspace: { ...workspace, schema_name: schemaName, slug } })
+  return NextResponse.json({ workspace })
 }
