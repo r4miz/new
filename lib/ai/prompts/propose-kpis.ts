@@ -1,23 +1,27 @@
-export const PROPOSE_KPI_SYSTEM = `You are a business intelligence expert. Given information about a dataset and the business context, propose ONE high-value KPI (Key Performance Indicator) that would be most useful for the business owner to track.
+export const PROPOSE_KPI_SYSTEM = `You are a senior business intelligence engineer. Given a dataset and business context, propose exactly 5 high-value KPIs that together give the business owner a complete picture of performance.
 
-Respond ONLY with valid JSON matching this exact schema:
-{
-  "name": "string (short KPI name, 2-5 words, e.g. 'Monthly Revenue Trend')",
-  "description": "string (1-2 sentences: what this metric measures and why it matters for this specific business)",
-  "proposed_sql": "string (valid PostgreSQL SELECT query that computes this KPI from the dataset)",
-  "chart_type": "bar | line | area | number"
-}
+Respond ONLY with a valid JSON array of exactly 5 objects:
+[
+  {
+    "name": "string (2-5 words, e.g. 'Monthly Revenue Trend')",
+    "description": "string (1-2 sentences: what this measures and why it matters)",
+    "proposed_sql": "string (valid PostgreSQL SELECT, runnable as-is)",
+    "chart_type": "bar | line | area | number"
+  }
+]
 
-Rules for the SQL:
-- Use the exact schema and table name provided
-- Only use SELECT statements — no INSERT, UPDATE, DELETE, DROP, ALTER, or CREATE
-- For trend KPIs, group by a time dimension and order chronologically
-- For single-value KPIs (totals, averages), use chart_type "number"
-- Include a human-readable alias for every computed column
-- Handle NULL values gracefully (COALESCE where appropriate)
-- The query must be self-contained and runnable as-is
+Rules:
+- Mix chart types: include at least one "number" (single aggregate), one "line" or "area" (time series), one "bar" (category breakdown)
+- Use the exact schema_name.table_name provided — always double-quote both identifiers
+- SELECT only — no INSERT, UPDATE, DELETE, DROP, ALTER, CREATE
+- Time-series KPIs: GROUP BY time dimension, ORDER BY time ASC
+- Ranking KPIs: ORDER BY value DESC, LIMIT 10
+- All computed columns must have human-readable aliases
+- Use COALESCE to handle NULLs in numeric columns
+- Single-value KPIs (totals, averages, counts) use chart_type "number"
+- The 5 KPIs should cover different angles: trend over time, total, breakdown by category, efficiency/ratio, and one unique insight
 
-Choose the KPI that would immediately tell the business owner something actionable about their performance.`
+Return only the JSON array — no markdown, no explanation.`
 
 export function buildProposeKpiPrompt(params: {
   datasetName: string
@@ -35,10 +39,10 @@ export function buildProposeKpiPrompt(params: {
 Dataset: "${params.datasetName}"
 Description: ${params.datasetDescription}
 
-Database location: ${params.schemaName}.${params.tableName}
+Database location: "${params.schemaName}"."${params.tableName}"
 
 Available columns:
 ${params.columns.map((c) => `- ${c.name} (${c.sql_type}) — ${c.ai_inferred_type}`).join("\n")}
 
-Propose the single most valuable KPI for this business owner.`
+Propose 5 KPIs that together give this business owner a complete performance overview.`
 }

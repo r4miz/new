@@ -43,7 +43,7 @@ export default async function DashboardPage({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {kpis.map((kpi) => (
-            <KpiTile key={kpi.id} kpi={kpi} />
+            <KpiTile key={kpi.id} kpi={kpi} workspaceSlug={workspaceSlug} />
           ))}
         </div>
       )}

@@ -70,23 +70,23 @@ BEGIN
   --   v_col_names  — "col, ..."       used in INSERT target list
   --   v_cast_exprs — "CASE WHEN t.col='' THEN NULL ELSE t.col END::TYPE, ..."
   SELECT
-    string_agg(format('%I text', col->>'name'), ', ' ORDER BY ord),
-    string_agg(format('%I', col->>'name'), ', ' ORDER BY ord),
+    string_agg(format('%I text', value->>'name'), ', ' ORDER BY ord),
+    string_agg(format('%I', value->>'name'), ', ' ORDER BY ord),
     string_agg(
       format(
         $f$CASE WHEN t.%I = '' THEN NULL ELSE t.%I END::%s$f$,
-        col->>'name',
-        col->>'name',
+        value->>'name',
+        value->>'name',
         CASE
-          WHEN (col->>'sql_type') IN ('NUMERIC','DATE','TIMESTAMPTZ','BOOLEAN')
-          THEN col->>'sql_type'
+          WHEN (value->>'sql_type') IN ('NUMERIC','DATE','TIMESTAMPTZ','BOOLEAN')
+          THEN value->>'sql_type'
           ELSE 'TEXT'
         END
       ),
       ', ' ORDER BY ord
     )
   INTO v_read_defs, v_col_names, v_cast_exprs
-  FROM jsonb_array_elements(p_columns) WITH ORDINALITY AS col(value, ord);
+  FROM jsonb_array_elements(p_columns) WITH ORDINALITY AS t(value, ord);
 
   EXECUTE format(
     'INSERT INTO %I.%I (%s) SELECT %s FROM jsonb_to_recordset($1) AS t(%s)',
