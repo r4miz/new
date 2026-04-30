@@ -2,9 +2,11 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { adminClient } from "@/lib/supabase/admin"
 import { parseCSV } from "@/lib/csv/parser"
-import { sanitizeTableName } from "@/lib/utils"
+import { sanitizeTableName, workspaceSchemaName } from "@/lib/utils"
 
 export const maxDuration = 60
+
+const BATCH_SIZE = 250
 
 export async function POST(request: Request) {
   // Step 1: auth
@@ -56,11 +58,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `[step4-parse] ${err}` }, { status: 400 })
   }
 
-  // Step 5: insert dataset metadata
-  const tableName = sanitizeTableName(datasetName)
+  // Step 5: insert dataset metadata (generate ID upfront for unique table name)
+  const datasetId = crypto.randomUUID()
+  const tableName = sanitizeTableName(datasetName) + "_" + datasetId.replace(/-/g, "").slice(0, 8)
+
   const { data: dataset, error: dsErr } = await adminClient
     .from("datasets")
     .insert({
+      id: datasetId,
       workspace_id: workspaceId,
       name: datasetName,
       table_name: tableName,
@@ -74,6 +79,40 @@ export async function POST(request: Request) {
 
   if (dsErr) {
     return NextResponse.json({ error: `[step5-insert] ${dsErr.message}` }, { status: 500 })
+  }
+
+  // Step 6: create the Postgres table for this dataset
+  const schemaName = workspaceSchemaName(workspaceId)
+  const columnDefs = parsed.columnMetadata.map((c) => ({ name: c.name, sql_type: c.sql_type }))
+
+  const { error: ctErr } = await adminClient.rpc("create_dataset_table", {
+    p_schema_name: schemaName,
+    p_table_name: tableName,
+    p_columns: columnDefs,
+  })
+  if (ctErr) {
+    return NextResponse.json({ error: `[step6-create-table] ${ctErr.message}` }, { status: 500 })
+  }
+
+  // Step 7: insert rows in batches, mapping original header names → sanitized column names
+  for (let i = 0; i < parsed.rows.length; i += BATCH_SIZE) {
+    const batch = parsed.rows.slice(i, i + BATCH_SIZE).map((row) => {
+      const out: Record<string, string> = {}
+      parsed.columnMetadata.forEach((col) => {
+        out[col.name] = row[col.original_name] ?? ""
+      })
+      return out
+    })
+
+    const { error: insErr } = await adminClient.rpc("insert_dataset_batch", {
+      p_schema_name: schemaName,
+      p_table_name: tableName,
+      p_rows: batch,
+      p_columns: columnDefs,
+    })
+    if (insErr) {
+      return NextResponse.json({ error: `[step7-insert-rows] batch=${i} ${insErr.message}` }, { status: 500 })
+    }
   }
 
   return NextResponse.json({ dataset })
