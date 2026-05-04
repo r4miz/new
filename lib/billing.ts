@@ -1,52 +1,42 @@
 export const PLANS = {
   starter: {
     name: "Starter",
-    price: 99,
-    description: "For solo founders and small teams getting started with data.",
+    description: "For solo founders getting started with AI analytics.",
+    monthly: { price: 15, priceEnvKey: "STRIPE_STARTER_MONTHLY_PRICE_ID" },
+    yearly:  { price: 150, priceEnvKey: "STRIPE_STARTER_YEARLY_PRICE_ID", perMonth: 12.50, saving: 30 },
     features: [
       "1 workspace",
       "Up to 5 datasets",
       "AI-generated KPI dashboard",
-      "5 KPIs per dataset",
-      "Data drill-in & row tables",
+      "Data drill-in & tables",
+      "AI business advisor chat",
       "Email support",
     ],
-    cta: "Get started",
     popular: false,
   },
   pro: {
     name: "Pro",
-    price: 249,
-    description: "For growing businesses that need unlimited data and AI chat.",
+    description: "For growing businesses that need unlimited data and AI insights.",
+    monthly: { price: 35, priceEnvKey: "STRIPE_PRO_MONTHLY_PRICE_ID" },
+    yearly:  { price: 350, priceEnvKey: "STRIPE_PRO_YEARLY_PRICE_ID", perMonth: 29.17, saving: 70 },
     features: [
       "Up to 5 workspaces",
       "Unlimited datasets",
-      "Unlimited KPIs per dataset",
-      "AI Chat — ask questions about your data",
+      "Unlimited KPIs",
+      "AI business advisor chat",
       "Team members (up to 5)",
-      "Priority email & chat support",
+      "Priority support",
     ],
-    cta: "Get started",
     popular: true,
-  },
-  business: {
-    name: "Business",
-    price: 499,
-    description: "For teams that need integrations and enterprise-grade scale.",
-    features: [
-      "Unlimited workspaces",
-      "Unlimited datasets",
-      "Everything in Pro",
-      "Native integrations (Shopify, QuickBooks, Sheets)",
-      "Unlimited team members",
-      "Dedicated account manager + SLA",
-    ],
-    cta: "Get started",
-    popular: false,
   },
 } as const
 
 export type PlanKey = keyof typeof PLANS
+export type BillingPeriod = "monthly" | "yearly"
+
+export function getPriceId(plan: PlanKey, period: BillingPeriod): string | undefined {
+  return process.env[PLANS[plan][period].priceEnvKey]
+}
 
 export function getDaysLeft(trialEndsAt: string): number {
   const diff = new Date(trialEndsAt).getTime() - Date.now()
