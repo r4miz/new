@@ -5,7 +5,7 @@ import { getDaysLeft } from "@/lib/billing"
 import { TrialBanner } from "@/components/billing/TrialBanner"
 import { UpgradeGate } from "@/components/billing/UpgradeGate"
 import Link from "next/link"
-import { LayoutDashboard, Database, MessageSquare, Settings, LogOut, CreditCard } from "lucide-react"
+import { LayoutDashboard, Database, MessageSquare, Settings, LogOut, CreditCard, Plug } from "lucide-react"
 
 export default async function WorkspaceLayout({
   children,
@@ -60,8 +60,9 @@ export default async function WorkspaceLayout({
 
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           <SidebarLink href={`${base}/dashboard`}   icon={<LayoutDashboard size={15} />} label="Dashboard" />
-          <SidebarLink href={`${base}/data/upload`} icon={<Database size={15} />}        label="Data sources" />
-          <SidebarLink href={`${base}/chat`}        icon={<MessageSquare size={15} />}   label="AI Chat" />
+          <SidebarLink href={`${base}/data/upload`}   icon={<Database size={15} />}       label="Data sources" />
+          <SidebarLink href={`${base}/integrations`} icon={<Plug size={15} />}           label="Integrations" />
+          <SidebarLink href={`${base}/chat`}         icon={<MessageSquare size={15} />}  label="AI Chat" />
           <div className="pt-2 mt-2 border-t border-slate-100">
             <SidebarLink href={`${base}/settings/billing`} icon={<CreditCard size={15} />} label="Billing" />
             <SidebarLink href={`${base}/settings`}         icon={<Settings size={15} />}   label="Settings" />
