@@ -81,7 +81,7 @@ export async function POST(request: Request) {
       rawResponse = await callClaude(
         PARSE_DATASET_SYSTEM,
         buildParseDatasetPrompt(dataset.original_filename ?? dataset.name, headers, sampleRows),
-        { model: "claude-3-5-haiku-20241022", endpoint: "parse-dataset", workspaceId: workspace_id, maxTokens: 1024 }
+        { model: "claude-haiku-4-5-20251001", endpoint: "parse-dataset", workspaceId: workspace_id, maxTokens: 1024 }
       )
     } catch (e) {
       return NextResponse.json({ error: `[parse-claude] ${e}` }, { status: 500 })
