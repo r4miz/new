@@ -3,7 +3,13 @@ import { createClient } from "@/lib/supabase/server"
 import { getWorkspaceBySlug } from "@/lib/db/workspaces"
 import { WorkspaceSettingsForm } from "@/components/settings/WorkspaceSettingsForm"
 import Link from "next/link"
-import { CreditCard } from "lucide-react"
+import { CreditCard, ArrowRight } from "lucide-react"
+
+const cardStyle = {
+  background: "white", border: "1px solid #e5e7eb",
+  borderRadius: "12px", padding: "28px",
+  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+}
 
 export default async function SettingsPage({
   params,
@@ -19,34 +25,49 @@ export default async function SettingsPage({
   if (!workspace) redirect("/onboarding")
 
   return (
-    <div className="p-6 max-w-2xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Settings</h1>
-        <p className="text-slate-500 text-sm mt-0.5">Manage your workspace configuration.</p>
+    <div style={{ minHeight: "100%", background: "#f1f5f9" }}>
+      <div style={{ background: "white", borderBottom: "1px solid #e5e7eb", padding: "28px 36px" }}>
+        <div style={{ maxWidth: "760px", margin: "0 auto" }}>
+          <h1 style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.5px" }}>Settings</h1>
+          <p style={{ margin: "5px 0 0", fontSize: "13.5px", color: "#6b7280" }}>Manage your workspace preferences.</p>
+        </div>
       </div>
 
-      {/* Workspace settings */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 mb-5 shadow-sm">
-        <h2 className="text-sm font-bold text-slate-900 mb-5">Workspace</h2>
-        <WorkspaceSettingsForm workspace={workspace} />
-      </div>
+      <div style={{ padding: "32px 36px" }}>
+        <div style={{ maxWidth: "760px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "20px" }}>
 
-      {/* Quick links */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-        <h2 className="text-sm font-bold text-slate-900 mb-4">Other settings</h2>
-        <div className="space-y-2">
-          <Link
-            href={`/w/${workspaceSlug}/settings/billing`}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-50 border border-slate-100 transition-colors group"
-          >
-            <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center group-hover:bg-blue-50 transition-colors">
-              <CreditCard size={15} className="text-slate-500 group-hover:text-blue-600 transition-colors" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-900">Billing & subscription</p>
-              <p className="text-xs text-slate-500">Manage your plan, invoices, and payment method</p>
-            </div>
-          </Link>
+          <div style={cardStyle}>
+            <h2 style={{ margin: "0 0 24px", fontSize: "15px", fontWeight: 700, color: "#0f172a" }}>
+              Workspace
+            </h2>
+            <WorkspaceSettingsForm workspace={workspace} />
+          </div>
+
+          <div style={cardStyle}>
+            <h2 style={{ margin: "0 0 16px", fontSize: "15px", fontWeight: 700, color: "#0f172a" }}>
+              Other
+            </h2>
+            <Link
+              href={`/w/${workspaceSlug}/settings/billing`}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "14px 16px", borderRadius: "10px",
+                border: "1px solid #e5e7eb", textDecoration: "none",
+                background: "#f8fafc", transition: "background 0.15s",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ width: "34px", height: "34px", borderRadius: "8px", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <CreditCard size={16} color="#2563eb" />
+                </div>
+                <div>
+                  <p style={{ margin: 0, fontSize: "14px", fontWeight: 600, color: "#0f172a" }}>Billing &amp; subscription</p>
+                  <p style={{ margin: 0, fontSize: "12px", color: "#9ca3af" }}>Manage your plan, invoices, and payment method</p>
+                </div>
+              </div>
+              <ArrowRight size={16} color="#9ca3af" />
+            </Link>
+          </div>
         </div>
       </div>
     </div>

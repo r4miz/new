@@ -4,15 +4,28 @@ import { getWorkspaceBySlug } from "@/lib/db/workspaces"
 import { getDaysLeft, PLANS } from "@/lib/billing"
 import { PricingCards } from "@/components/billing/PricingCards"
 import { ManageSubscriptionButton } from "@/components/billing/ManageSubscriptionButton"
-import { CheckCircle, AlertTriangle, Clock, XCircle } from "lucide-react"
+import { CheckCircle } from "lucide-react"
 
-const STATUS_CONFIG = {
-  active:    { icon: CheckCircle,    color: "text-emerald-600", bg: "bg-emerald-50 border-emerald-200", label: "Active" },
-  trialing:  { icon: Clock,          color: "text-amber-600",   bg: "bg-amber-50 border-amber-200",     label: "Free trial" },
-  past_due:  { icon: AlertTriangle,  color: "text-red-600",     bg: "bg-red-50 border-red-200",         label: "Payment failed" },
-  canceled:  { icon: XCircle,        color: "text-slate-500",   bg: "bg-slate-50 border-slate-200",     label: "Canceled" },
-  expired:   { icon: XCircle,        color: "text-slate-500",   bg: "bg-slate-50 border-slate-200",     label: "Expired" },
-} as const
+const STATUS: Record<string, { label: string; color: string; bg: string }> = {
+  active:   { label: "Active",         color: "#059669", bg: "#ecfdf5" },
+  trialing: { label: "Free trial",     color: "#d97706", bg: "#fffbeb" },
+  past_due: { label: "Payment failed", color: "#dc2626", bg: "#fef2f2" },
+  canceled: { label: "Canceled",       color: "#64748b", bg: "#f8fafc" },
+  expired:  { label: "Expired",        color: "#64748b", bg: "#f8fafc" },
+}
+
+const pageStyle = { minHeight: "100%", background: "#f1f5f9" }
+
+const headerStyle = {
+  background: "white", borderBottom: "1px solid #e5e7eb",
+  padding: "28px 36px", flexShrink: 0,
+}
+
+const cardStyle = {
+  background: "white", border: "1px solid #e5e7eb",
+  borderRadius: "12px", padding: "28px",
+  boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+}
 
 export default async function BillingPage({
   params,
@@ -27,106 +40,100 @@ export default async function BillingPage({
   const workspace = await getWorkspaceBySlug(workspaceSlug)
   if (!workspace) redirect("/onboarding")
 
-  const status   = workspace.subscription_status as keyof typeof STATUS_CONFIG
+  const status   = workspace.subscription_status
   const daysLeft = getDaysLeft(workspace.trial_ends_at)
   const isActive = status === "active"
-  const statusCfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.expired
-  const StatusIcon = statusCfg.icon
+  const cfg      = STATUS[status] ?? STATUS.expired
 
   return (
-    <div className="p-6 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Billing</h1>
-        <p className="text-slate-500 text-sm mt-0.5">Manage your subscription and payment details.</p>
+    <div style={pageStyle}>
+      <div style={headerStyle}>
+        <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+          <h1 style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.5px" }}>Billing</h1>
+          <p style={{ margin: "5px 0 0", fontSize: "13.5px", color: "#6b7280" }}>Manage your subscription and payment details.</p>
+        </div>
       </div>
 
-      {/* Current plan card */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 mb-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Current plan</p>
-            <div className="flex items-center gap-2.5 mb-3">
-              <h2 className="text-xl font-bold text-slate-900">
-                {isActive ? "Pro" : "Free Trial"}
-              </h2>
-              <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${statusCfg.bg} ${statusCfg.color}`}>
-                <StatusIcon size={12} />
-                {statusCfg.label}
-              </span>
+      <div style={{ padding: "32px 36px" }}>
+        <div style={{ maxWidth: "900px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "20px" }}>
+
+          {/* Current plan */}
+          <div style={cardStyle}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "24px" }}>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: "0 0 10px", fontSize: "11px", fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.07em" }}>
+                  Current plan
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
+                  <h2 style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: "#0f172a" }}>
+                    {isActive ? "Pro" : "Free Trial"}
+                  </h2>
+                  <span style={{
+                    fontSize: "11px", fontWeight: 700, padding: "4px 10px", borderRadius: "99px",
+                    color: cfg.color, background: cfg.bg,
+                  }}>
+                    ● {cfg.label}
+                  </span>
+                </div>
+                <p style={{ margin: 0, fontSize: "14px", color: "#64748b", lineHeight: 1.6 }}>
+                  {status === "trialing" && daysLeft > 0 && `Trial ends in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}. All features included.`}
+                  {status === "trialing" && daysLeft === 0 && "Your trial has ended. Choose a plan below."}
+                  {status === "active" && "Your subscription is active. Manage billing, invoices, and payment below."}
+                  {status === "past_due" && "Your last payment failed. Update your payment method to restore access."}
+                  {(status === "canceled" || status === "expired") && "Subscription ended. Choose a plan below to reactivate."}
+                </p>
+              </div>
+              {isActive && workspace.stripe_customer_id && (
+                <ManageSubscriptionButton workspaceId={workspace.id} />
+              )}
             </div>
 
-            {status === "trialing" && (
-              <p className="text-sm text-slate-500">
-                {daysLeft > 0
-                  ? `Your trial ends in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}. All Pro features are included.`
-                  : "Your trial has ended. Choose a plan below to continue."}
-              </p>
-            )}
-            {status === "active" && (
-              <p className="text-sm text-slate-500">
-                Your subscription is active. Manage payment method, view invoices, or cancel below.
-              </p>
-            )}
-            {status === "past_due" && (
-              <p className="text-sm text-red-600">
-                Your last payment failed. Please update your payment method to restore access.
-              </p>
-            )}
-            {(status === "canceled" || status === "expired") && (
-              <p className="text-sm text-slate-500">
-                Your subscription has ended. Choose a plan below to reactivate.
-              </p>
+            {status === "trialing" && daysLeft > 0 && (
+              <div style={{ marginTop: "24px", paddingTop: "20px", borderTop: "1px solid #f3f4f6" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "12px", color: "#64748b" }}>Trial progress</span>
+                  <span style={{ fontSize: "12px", color: "#64748b" }}>{14 - daysLeft} / 14 days used</span>
+                </div>
+                <div style={{ height: "6px", background: "#f3f4f6", borderRadius: "99px", overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%", borderRadius: "99px",
+                    background: daysLeft <= 3 ? "#ef4444" : "#f59e0b",
+                    width: `${Math.min(100, ((14 - daysLeft) / 14) * 100)}%`,
+                    transition: "width 0.3s",
+                  }} />
+                </div>
+              </div>
             )}
           </div>
 
-          {isActive && workspace.stripe_customer_id && (
-            <ManageSubscriptionButton workspaceId={workspace.id} />
+          {/* Pricing plans */}
+          {!isActive && (
+            <div>
+              <h2 style={{ margin: "0 0 20px", fontSize: "18px", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.3px" }}>
+                {status === "trialing" && daysLeft > 0 ? "Upgrade before your trial ends" : "Choose a plan to continue"}
+              </h2>
+              <PricingCards workspaceId={workspace.id} />
+            </div>
+          )}
+
+          {/* Features (active) */}
+          {isActive && (
+            <div style={cardStyle}>
+              <h3 style={{ margin: "0 0 20px", fontSize: "15px", fontWeight: 700, color: "#0f172a" }}>
+                What&apos;s included in Pro
+              </h3>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                {PLANS.pro.features.map(f => (
+                  <div key={f} style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <CheckCircle size={14} color="#0ea5e9" />
+                    <span style={{ fontSize: "13.5px", color: "#374151" }}>{f}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
-
-        {/* Trial progress bar */}
-        {status === "trialing" && daysLeft > 0 && (
-          <div className="mt-5 pt-5 border-t border-slate-100">
-            <div className="flex justify-between text-xs text-slate-500 mb-2">
-              <span>Trial progress</span>
-              <span>{14 - daysLeft} of 14 days used</span>
-            </div>
-            <div className="w-full bg-slate-100 rounded-full h-2">
-              <div
-                className="bg-amber-400 h-2 rounded-full transition-all"
-                style={{ width: `${Math.min(100, ((14 - daysLeft) / 14) * 100)}%` }}
-              />
-            </div>
-          </div>
-        )}
       </div>
-
-      {/* Pricing plans (show when not active) */}
-      {!isActive && (
-        <div>
-          <h2 className="text-lg font-bold text-slate-900 mb-5">
-            {status === "trialing" && daysLeft > 0
-              ? "Upgrade before your trial ends"
-              : "Choose a plan"}
-          </h2>
-          <PricingCards workspaceId={workspace.id} />
-        </div>
-      )}
-
-      {/* What's included (show when active) */}
-      {isActive && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6">
-          <h2 className="text-sm font-semibold text-slate-700 mb-4">What&apos;s included in your plan</h2>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {PLANS.pro.features.map((f) => (
-              <li key={f} className="flex items-center gap-2.5 text-sm text-slate-600">
-                <CheckCircle size={14} className="text-emerald-500 flex-shrink-0" />
-                {f}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   )
 }
