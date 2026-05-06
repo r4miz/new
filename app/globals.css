@@ -9,26 +9,20 @@
 html { height: 100%; }
 
 body {
-  background: #f1f5f9;
+  background: #f8fafc;
   color: #0f172a;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Polished scrollbars */
-::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-/* Sidebar — no scrollbar */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
 
-/* Auth split screen */
-.lg-show { display: none; }
-@media (min-width: 1024px) { .lg-show { display: flex; } }
-
-/* Card shadow system */
-.card { box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.06); }
-.card:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.1); }
+/* Auth split panel */
+.auth-left { display: none; }
+@media (min-width: 1024px) { .auth-left { display: flex; } }

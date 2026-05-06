@@ -6,7 +6,7 @@ import { getKpiProposals } from "@/lib/db/kpis"
 import { KpiTile } from "@/components/dashboard/KpiTile"
 import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard"
 import Link from "next/link"
-import { Plus, Database, TrendingUp, Plug } from "lucide-react"
+import { Plus } from "lucide-react"
 
 export default async function DashboardPage({
   params,
@@ -27,91 +27,65 @@ export default async function DashboardPage({
     adminClient.from("integrations").select("*", { count: "exact", head: true }).eq("workspace_id", workspace.id).eq("status", "active"),
   ])
 
-  const stats = [
-    { label: "KPIs tracked",        value: kpis.length,   icon: TrendingUp },
-    { label: "Datasets",            value: dsCount ?? 0,  icon: Database   },
-    { label: "Live integrations",   value: intCount ?? 0, icon: Plug       },
-  ]
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
-      {/* Dark hero header */}
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0, background: "#f8fafc" }}>
+      {/* Page header */}
       <div style={{
-        background: "linear-gradient(135deg, #0b0d14 0%, #0f172a 60%, #1e1b4b 100%)",
-        padding: "32px 32px 0",
+        background: "white",
+        borderBottom: "1px solid #e2e8f0",
+        padding: "24px 32px",
         flexShrink: 0,
       }}>
-        {/* Top row */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "28px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
           <div>
-            <h1 style={{ fontSize: "24px", fontWeight: 700, color: "#f8fafc", margin: 0, letterSpacing: "-0.5px" }}>
+            <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#0f172a", margin: 0, letterSpacing: "-0.4px" }}>
               Dashboard
             </h1>
-            <p style={{ fontSize: "13px", color: "#64748b", marginTop: "4px" }}>
-              {workspace.industry
-                ? `AI insights for ${workspace.industry} · ${workspace.name}`
-                : `AI-powered analytics · ${workspace.name}`}
+            <p style={{ fontSize: "13px", color: "#94a3b8", margin: "3px 0 0" }}>
+              {workspace.industry ? `${workspace.industry} · ${workspace.name}` : workspace.name}
             </p>
           </div>
-          <Link
-            href={`/w/${workspaceSlug}/data/upload`}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: "6px",
-              background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-              color: "white", fontSize: "13px", fontWeight: 600,
-              padding: "9px 16px", borderRadius: "10px", textDecoration: "none",
-              boxShadow: "0 4px 12px rgba(37,99,235,0.35)",
-            }}
-          >
-            <Plus size={14} />
+          <Link href={`/w/${workspaceSlug}/data/upload`} style={{
+            display: "inline-flex", alignItems: "center", gap: "6px",
+            background: "#0ea5e9", color: "white",
+            fontSize: "13.5px", fontWeight: 600,
+            padding: "9px 18px", borderRadius: "8px",
+            textDecoration: "none", transition: "background 0.15s",
+          }}>
+            <Plus size={14} strokeWidth={2.5} />
             Add data
           </Link>
         </div>
 
-        {/* Stats strip */}
-        <div style={{ display: "flex", gap: "1px", marginBottom: "-1px" }}>
-          {stats.map((s, i) => {
-            const Icon = s.icon
-            return (
-              <div key={s.label} style={{
-                flex: 1, padding: "16px 20px",
-                background: "rgba(255,255,255,0.04)",
-                borderTop: "1px solid rgba(255,255,255,0.08)",
-                borderLeft: i > 0 ? "1px solid rgba(255,255,255,0.06)" : "none",
-                display: "flex", alignItems: "center", gap: "12px",
-              }}>
-                <div style={{
-                  width: "32px", height: "32px", borderRadius: "8px",
-                  background: "rgba(255,255,255,0.07)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0,
-                }}>
-                  <Icon size={15} color="#94a3b8" />
-                </div>
-                <div>
-                  <div style={{ fontSize: "22px", fontWeight: 700, color: "#f1f5f9", lineHeight: 1 }}>
-                    {s.value}
-                  </div>
-                  <div style={{ fontSize: "11px", color: "#475569", marginTop: "3px" }}>
-                    {s.label}
-                  </div>
-                </div>
-              </div>
-            )
-          })}
+        {/* Stats */}
+        <div style={{ display: "flex", gap: "24px" }}>
+          {[
+            { label: "KPIs tracked",      value: kpis.length   },
+            { label: "Datasets",          value: dsCount ?? 0  },
+            { label: "Live integrations", value: intCount ?? 0 },
+          ].map((s, i) => (
+            <div key={s.label} style={{
+              display: "flex", alignItems: "center", gap: "10px",
+              paddingRight: i < 2 ? "24px" : 0,
+              borderRight: i < 2 ? "1px solid #f1f5f9" : "none",
+            }}>
+              <span style={{ fontSize: "24px", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.8px", lineHeight: 1 }}>
+                {s.value}
+              </span>
+              <span style={{ fontSize: "12.5px", color: "#94a3b8", lineHeight: 1.3, maxWidth: "80px" }}>
+                {s.label}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Content */}
+      {/* KPI grid */}
       <div style={{ flex: 1, overflowY: "auto", padding: "28px 32px" }}>
         {kpis.length === 0 ? (
           <EmptyDashboard workspaceSlug={workspaceSlug} />
         ) : (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-            gap: "16px",
-          }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
             {kpis.map((kpi) => (
               <KpiTile key={kpi.id} kpi={kpi} workspaceSlug={workspaceSlug} />
             ))}
