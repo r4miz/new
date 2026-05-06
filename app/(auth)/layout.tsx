@@ -1,61 +1,107 @@
-import { TrendingUp, BarChart3, MessageSquare, Plug } from "lucide-react"
-
-const FEATURES = [
-  { icon: BarChart3,     text: "AI-generated KPI dashboards from any data source in minutes" },
-  { icon: MessageSquare, text: "Ask your data questions and get expert answers instantly" },
-  { icon: Plug,          text: "Connects to Shopify, Google Sheets, HubSpot, and more" },
-]
+import { TrendingUp, BarChart3, MessageSquare, Plug, Star } from "lucide-react"
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex">
-      {/* Left — branded panel */}
-      <div className="hidden lg:flex w-[46%] bg-[#0c0f1a] flex-col px-14 py-12 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
-        <div className="absolute bottom-0 right-0 w-80 h-80 bg-violet-600/15 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 pointer-events-none" />
+    <div style={{ display: "flex", minHeight: "100vh" }}>
 
-        <div className="flex items-center gap-2.5 relative">
-          <div className="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center">
-            <TrendingUp size={16} className="text-white" />
+      {/* ── Left panel (dark, branded) ── */}
+      <div style={{
+        display: "none",
+        width: "45%",
+        background: "linear-gradient(160deg, #0b0d14 0%, #0f172a 50%, #1e1b4b 100%)",
+        flexDirection: "column",
+        padding: "40px 48px",
+        position: "relative",
+        overflow: "hidden",
+      }}
+        className="lg-show"
+      >
+        {/* Ambient glows */}
+        <div style={{ position: "absolute", top: "-80px", left: "-80px", width: "300px", height: "300px", background: "radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "0", right: "-60px", width: "280px", height: "280px", background: "radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "50%", right: "10%", width: "150px", height: "150px", background: "radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)", pointerEvents: "none" }} />
+
+        {/* Logo */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", position: "relative" }}>
+          <div style={{
+            width: "34px", height: "34px",
+            background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+            borderRadius: "10px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 12px rgba(37,99,235,0.4)",
+          }}>
+            <TrendingUp size={17} color="white" />
           </div>
-          <span className="text-white font-bold text-lg tracking-tight">BizIntel</span>
+          <span style={{ color: "#f1f5f9", fontWeight: 700, fontSize: "17px", letterSpacing: "-0.4px" }}>BizIntel</span>
         </div>
 
-        <div className="mt-auto relative pb-4">
-          <h1 className="text-[2.1rem] font-bold text-white leading-tight mb-4">
-            Your AI-powered<br />
-            business analyst,<br />
-            <span className="text-blue-400">always on.</span>
+        {/* Hero text */}
+        <div style={{ marginTop: "auto", position: "relative" }}>
+          <h1 style={{
+            fontSize: "36px", fontWeight: 800, color: "#f8fafc",
+            lineHeight: 1.15, margin: "0 0 16px",
+            letterSpacing: "-0.8px",
+          }}>
+            Your AI business<br />
+            analyst,{" "}
+            <span style={{ background: "linear-gradient(135deg, #60a5fa, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              always on.
+            </span>
           </h1>
-          <p className="text-slate-400 text-sm leading-relaxed mb-10 max-w-xs">
-            Connect your data, get instant AI dashboards, and ask any business question in plain English.
+          <p style={{ fontSize: "14px", color: "#64748b", lineHeight: 1.65, marginBottom: "36px", maxWidth: "300px" }}>
+            Upload your data, get instant AI-generated dashboards, and ask any business question in plain English.
           </p>
 
-          <div className="space-y-4">
-            {FEATURES.map(({ icon: Icon, text }) => (
-              <div key={text} className="flex items-start gap-3">
-                <div className="w-7 h-7 bg-blue-600/20 border border-blue-500/30 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Icon size={13} className="text-blue-400" />
-                </div>
-                <p className="text-slate-300 text-sm leading-relaxed">{text}</p>
+          {/* Features */}
+          {[
+            { Icon: BarChart3,     text: "AI-generated KPI dashboards in under a minute" },
+            { Icon: MessageSquare, text: "Ask questions, get expert answers grounded in your data" },
+            { Icon: Plug,          text: "Connects to Shopify, HubSpot, Stripe, and more" },
+          ].map(({ Icon, text }) => (
+            <div key={text} style={{ display: "flex", alignItems: "flex-start", gap: "12px", marginBottom: "16px" }}>
+              <div style={{
+                width: "28px", height: "28px", flexShrink: 0,
+                borderRadius: "8px", marginTop: "1px",
+                background: "rgba(59,130,246,0.12)",
+                border: "1px solid rgba(59,130,246,0.2)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <Icon size={13} color="#60a5fa" />
               </div>
-            ))}
-          </div>
+              <p style={{ fontSize: "13px", color: "#94a3b8", lineHeight: 1.5, margin: 0 }}>{text}</p>
+            </div>
+          ))}
 
-          <div className="mt-10 pt-6 border-t border-white/[0.06]">
-            <p className="text-slate-600 text-xs">14-day free trial · No credit card required · Cancel anytime</p>
+          {/* Trust strip */}
+          <div style={{
+            marginTop: "36px", paddingTop: "24px",
+            borderTop: "1px solid rgba(255,255,255,0.07)",
+            display: "flex", alignItems: "center", gap: "8px",
+          }}>
+            <div style={{ display: "flex" }}>
+              {[1,2,3,4,5].map((i) => <Star key={i} size={12} color="#f59e0b" fill="#f59e0b" />)}
+            </div>
+            <span style={{ fontSize: "12px", color: "#475569" }}>14-day free trial · No card required · Cancel anytime</span>
           </div>
         </div>
       </div>
 
-      {/* Right — form */}
-      <div className="flex-1 flex items-center justify-center bg-white px-8 py-12">
-        <div className="w-full max-w-sm">
-          <div className="flex items-center gap-2 mb-8 lg:hidden">
-            <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
-              <TrendingUp size={14} className="text-white" />
+      {/* ── Right panel (form) ── */}
+      <div style={{
+        flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+        background: "white", padding: "40px 32px",
+      }}>
+        <div style={{ width: "100%", maxWidth: "360px" }}>
+          {/* Mobile logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "36px" }}>
+            <div style={{
+              width: "30px", height: "30px",
+              background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+              borderRadius: "9px", display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <TrendingUp size={15} color="white" />
             </div>
-            <span className="font-bold text-slate-900">BizIntel</span>
+            <span style={{ fontWeight: 700, fontSize: "15px", color: "#0f172a", letterSpacing: "-0.3px" }}>BizIntel</span>
           </div>
           {children}
         </div>

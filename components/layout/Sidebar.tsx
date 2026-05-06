@@ -4,8 +4,7 @@ import { usePathname } from "next/navigation"
 import Link from "next/link"
 import {
   LayoutDashboard, Database, Plug, MessageSquare,
-  CreditCard, Settings, LogOut, TrendingUp,
-  ChevronDown,
+  CreditCard, Settings, LogOut, TrendingUp, ChevronDown,
 } from "lucide-react"
 import type { Workspace } from "@/lib/types"
 
@@ -15,26 +14,53 @@ interface Props {
   subscriptionStatus: string
 }
 
-function NavItem({
-  href, icon, label, base,
-}: {
-  href: string; icon: React.ReactNode; label: string; base: string
-}) {
-  const pathname = usePathname()
-  const isActive = pathname === href || (href !== base + "/dashboard" && pathname.startsWith(href))
+const SIDEBAR_BG    = "#0b0d14"
+const ACTIVE_BG     = "rgba(255,255,255,0.09)"
+const HOVER_BG      = "rgba(255,255,255,0.05)"
+const BORDER_COLOR  = "rgba(255,255,255,0.07)"
+const TEXT_DEFAULT  = "#64748b"
+const TEXT_ACTIVE   = "#f8fafc"
+const TEXT_HOVER    = "#cbd5e1"
+
+function NavItem({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+  const pathname  = usePathname()
+  const isActive  = pathname === href ||
+    (pathname.startsWith(href) && href !== "/" && !href.endsWith("/dashboard") || href === pathname)
+  const exactActive = pathname === href
+
+  // Special case: dashboard is only active when exactly on dashboard
+  const active = href.endsWith("/dashboard") ? exactActive : pathname.startsWith(href)
 
   return (
     <Link
       href={href}
-      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150 ${
-        isActive
-          ? "bg-white/10 text-white font-medium"
-          : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
-      }`}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: "9px",
+        padding: "7px 10px",
+        borderRadius: "9px",
+        fontSize: "13px",
+        fontWeight: active ? 500 : 400,
+        color: active ? TEXT_ACTIVE : TEXT_DEFAULT,
+        background: active ? ACTIVE_BG : "transparent",
+        transition: "all 0.15s ease",
+        textDecoration: "none",
+      }}
+      onMouseEnter={(e) => {
+        if (!active) {
+          (e.currentTarget as HTMLElement).style.background = HOVER_BG;
+          (e.currentTarget as HTMLElement).style.color = TEXT_HOVER;
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+          (e.currentTarget as HTMLElement).style.background = "transparent";
+          (e.currentTarget as HTMLElement).style.color = TEXT_DEFAULT;
+        }
+      }}
     >
-      <span className={`flex-shrink-0 ${isActive ? "text-white" : "text-slate-500"}`}>
-        {icon}
-      </span>
+      <span style={{ opacity: active ? 1 : 0.55, display: "flex" }}>{icon}</span>
       {label}
     </Link>
   )
@@ -42,66 +68,112 @@ function NavItem({
 
 export function Sidebar({ workspace, daysLeft, subscriptionStatus }: Props) {
   const base = `/w/${workspace.slug}`
-  const isActive = subscriptionStatus === "active"
+  const isActive  = subscriptionStatus === "active"
   const isTrialing = subscriptionStatus === "trialing"
 
   return (
-    <aside className="w-56 bg-[#0c0f1a] flex flex-col flex-shrink-0 border-r border-white/[0.06]">
+    <aside
+      style={{
+        width: "220px",
+        minWidth: "220px",
+        backgroundColor: SIDEBAR_BG,
+        borderRight: `1px solid ${BORDER_COLOR}`,
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        overflow: "hidden",
+      }}
+    >
       {/* Brand */}
-      <div className="px-4 py-4 border-b border-white/[0.06]">
-        <Link href={`${base}/dashboard`} className="flex items-center gap-2.5">
-          <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
-            <TrendingUp size={14} className="text-white" />
+      <div style={{ padding: "18px 16px 14px", borderBottom: `1px solid ${BORDER_COLOR}` }}>
+        <Link href={`${base}/dashboard`} style={{ display: "flex", alignItems: "center", gap: "10px", textDecoration: "none" }}>
+          <div style={{
+            width: "28px", height: "28px",
+            background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+            borderRadius: "8px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
+          }}>
+            <TrendingUp size={14} color="white" />
           </div>
-          <span className="font-bold text-white text-sm tracking-tight">BizIntel</span>
+          <span style={{ color: "#f1f5f9", fontWeight: 700, fontSize: "14px", letterSpacing: "-0.3px" }}>
+            BizIntel
+          </span>
         </Link>
       </div>
 
-      {/* Workspace selector */}
-      <div className="px-3 py-3 border-b border-white/[0.06]">
-        <button className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg hover:bg-white/[0.04] transition-colors group">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-5 h-5 rounded-md bg-gradient-to-br from-blue-500 to-violet-600 flex-shrink-0" />
-            <span className="text-xs font-medium text-slate-200 truncate">{workspace.name}</span>
+      {/* Workspace */}
+      <div style={{ padding: "10px 10px 6px", borderBottom: `1px solid ${BORDER_COLOR}` }}>
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "7px 8px", borderRadius: "8px", cursor: "pointer",
+          background: HOVER_BG,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
+            <div style={{
+              width: "20px", height: "20px", borderRadius: "5px", flexShrink: 0,
+              background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
+            }} />
+            <span style={{ color: "#cbd5e1", fontSize: "12.5px", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {workspace.name}
+            </span>
           </div>
-          <ChevronDown size={13} className="text-slate-500 flex-shrink-0" />
-        </button>
-        <div className="mt-1.5 px-2">
+          <ChevronDown size={12} color="#475569" style={{ flexShrink: 0 }} />
+        </div>
+        <div style={{ padding: "4px 8px" }}>
           {isTrialing && daysLeft > 0 && (
-            <span className="text-[10px] font-semibold text-amber-400">
-              {daysLeft}d trial left
+            <span style={{ fontSize: "10px", fontWeight: 600, color: "#f59e0b" }}>
+              {daysLeft}d left in trial
             </span>
           )}
           {isActive && (
-            <span className="text-[10px] font-semibold text-emerald-400">Pro · Active</span>
+            <span style={{ fontSize: "10px", fontWeight: 600, color: "#34d399" }}>Pro · Active</span>
           )}
           {!isTrialing && !isActive && (
-            <span className="text-[10px] font-semibold text-red-400">Trial ended</span>
+            <span style={{ fontSize: "10px", fontWeight: 600, color: "#f87171" }}>Trial ended</span>
           )}
         </div>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
-        <p className="px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-2">
+      {/* Navigation */}
+      <nav className="no-scrollbar" style={{ flex: 1, padding: "10px 8px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "2px" }}>
+        <p style={{ fontSize: "10px", fontWeight: 600, color: "#334155", textTransform: "uppercase", letterSpacing: "0.08em", padding: "6px 10px 4px" }}>
           Overview
         </p>
-        <NavItem href={`${base}/dashboard`}    icon={<LayoutDashboard size={15} />} label="Dashboard"    base={base} />
-        <NavItem href={`${base}/data/upload`}  icon={<Database size={15} />}       label="Data sources"  base={base} />
-        <NavItem href={`${base}/integrations`} icon={<Plug size={15} />}           label="Integrations"  base={base} />
-        <NavItem href={`${base}/chat`}         icon={<MessageSquare size={15} />}  label="AI Advisor"    base={base} />
+        <NavItem href={`${base}/dashboard`}    icon={<LayoutDashboard size={15} />} label="Dashboard" />
+        <NavItem href={`${base}/data/upload`}  icon={<Database size={15} />}       label="Data sources" />
+        <NavItem href={`${base}/integrations`} icon={<Plug size={15} />}           label="Integrations" />
+        <NavItem href={`${base}/chat`}         icon={<MessageSquare size={15} />}  label="AI Advisor" />
 
-        <p className="px-3 text-[10px] font-semibold text-slate-600 uppercase tracking-widest mt-4 mb-2">
+        <div style={{ height: "1px", background: BORDER_COLOR, margin: "8px 4px" }} />
+
+        <p style={{ fontSize: "10px", fontWeight: 600, color: "#334155", textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 10px" }}>
           Account
         </p>
-        <NavItem href={`${base}/settings/billing`} icon={<CreditCard size={15} />} label="Billing"  base={base} />
-        <NavItem href={`${base}/settings`}         icon={<Settings size={15} />}   label="Settings" base={base} />
+        <NavItem href={`${base}/settings/billing`} icon={<CreditCard size={15} />} label="Billing" />
+        <NavItem href={`${base}/settings`}          icon={<Settings size={15} />}   label="Settings" />
       </nav>
 
-      {/* Sign out */}
-      <div className="px-2 py-3 border-t border-white/[0.06]">
+      {/* Footer */}
+      <div style={{ borderTop: `1px solid ${BORDER_COLOR}`, padding: "10px 8px" }}>
         <form action="/api/auth/signout" method="post">
-          <button className="flex items-center gap-2.5 text-xs text-slate-500 hover:text-slate-300 w-full px-3 py-2 rounded-lg hover:bg-white/[0.04] transition-colors">
+          <button
+            style={{
+              display: "flex", alignItems: "center", gap: "8px",
+              padding: "7px 10px", borderRadius: "8px", width: "100%",
+              background: "none", border: "none", cursor: "pointer",
+              color: TEXT_DEFAULT, fontSize: "13px",
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background = HOVER_BG;
+              (e.currentTarget as HTMLElement).style.color = TEXT_HOVER;
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = "none";
+              (e.currentTarget as HTMLElement).style.color = TEXT_DEFAULT;
+            }}
+          >
             <LogOut size={14} />
             Sign out
           </button>

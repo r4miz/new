@@ -3,16 +3,9 @@
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import type { KpiProposal } from "@/lib/types"
-import { TrendingUp, TrendingDown, BarChart2, Hash, RefreshCw, AlertCircle } from "lucide-react"
+import { TrendingUp, TrendingDown, BarChart2, Hash, RefreshCw, AlertCircle, ArrowRight } from "lucide-react"
 import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  Tooltip,
+  ResponsiveContainer, AreaChart, Area, BarChart, Bar, LineChart, Line, Tooltip,
 } from "recharts"
 
 interface Props {
@@ -22,18 +15,15 @@ interface Props {
 
 type QueryRow = Record<string, unknown>
 
-// Per-chart-type accent colours
-const ACCENT = {
-  line:   { iconBg: "bg-blue-50",    iconColor: "text-blue-500",   stroke: "#3b82f6", fill: "#3b82f6" },
-  area:   { iconBg: "bg-violet-50",  iconColor: "text-violet-500", stroke: "#8b5cf6", fill: "#8b5cf6" },
-  bar:    { iconBg: "bg-amber-50",   iconColor: "text-amber-500",  stroke: "#f59e0b", fill: "#f59e0b" },
-  number: { iconBg: "bg-emerald-50", iconColor: "text-emerald-500",stroke: "#10b981", fill: "#10b981" },
-} as const
+const GRADIENTS: Record<string, { from: string; to: string; glow: string }> = {
+  line:   { from: "#1e3a8a", to: "#3b82f6", glow: "rgba(59,130,246,0.3)"  },
+  area:   { from: "#3b0764", to: "#7c3aed", glow: "rgba(124,58,237,0.3)"  },
+  bar:    { from: "#78350f", to: "#ea580c", glow: "rgba(234,88,12,0.3)"   },
+  number: { from: "#064e3b", to: "#059669", glow: "rgba(5,150,105,0.3)"   },
+}
 
-function chartIcon(type: KpiProposal["chart_type"]) {
-  if (type === "number") return <Hash size={15} />
-  if (type === "bar")    return <BarChart2 size={15} />
-  return <TrendingUp size={15} />
+const CHART_COLORS: Record<string, string> = {
+  line: "#60a5fa", area: "#a78bfa", bar: "#fb923c", number: "#34d399",
 }
 
 function fmt(v: unknown): string {
@@ -48,175 +38,197 @@ function fmt(v: unknown): string {
 function shortenLabel(v: unknown): string {
   const s = String(v ?? "")
   const m = s.match(/^(\d{4})-(\d{2})-\d{2}/)
-  if (m) {
-    const d = new Date(`${m[1]}-${m[2]}-01`)
-    return d.toLocaleString("default", { month: "short", year: "2-digit" })
-  }
-  return s.length > 12 ? s.slice(0, 11) + "…" : s
+  if (m) return new Date(`${m[1]}-${m[2]}-01`).toLocaleString("default", { month: "short", year: "2-digit" })
+  return s.length > 10 ? s.slice(0, 9) + "…" : s
 }
 
 function trendPct(rows: QueryRow[], col: string): number | null {
   if (rows.length < 2) return null
   const vals = rows.map((r) => Number(r[col] ?? 0))
-  const prev = vals[vals.length - 2]
-  const curr = vals[vals.length - 1]
+  const prev = vals[vals.length - 2], curr = vals[vals.length - 1]
   if (prev === 0) return null
   return ((curr - prev) / Math.abs(prev)) * 100
 }
 
-export function KpiTile({ kpi, workspaceSlug }: Props) {
-  const [rows, setRows] = useState<QueryRow[] | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: unknown }>; label?: string }) => {
+  if (!active || !payload?.length) return null
+  return (
+    <div style={{ background: "rgba(15,23,42,0.95)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "8px 12px", backdropFilter: "blur(8px)" }}>
+      <p style={{ color: "#94a3b8", fontSize: "11px", marginBottom: "2px" }}>{label}</p>
+      <p style={{ color: "#f1f5f9", fontSize: "13px", fontWeight: 600 }}>{fmt(payload[0]?.value)}</p>
+    </div>
+  )
+}
 
-  const accent = ACCENT[kpi.chart_type] ?? ACCENT.line
+export function KpiTile({ kpi, workspaceSlug }: Props) {
+  const [rows,    setRows]    = useState<QueryRow[] | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error,   setError]   = useState<string | null>(null)
+
+  const grad  = GRADIENTS[kpi.chart_type] ?? GRADIENTS.line
+  const color = CHART_COLORS[kpi.chart_type] ?? "#60a5fa"
 
   const fetchData = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true); setError(null)
     try {
-      const res = await fetch(`/api/kpis/${kpi.id}/execute`, { method: "POST" })
+      const res  = await fetch(`/api/kpis/${kpi.id}/execute`, { method: "POST" })
       const json = await res.json()
       if (!res.ok) throw new Error(json.error ?? "Execute failed")
       setRows(json.rows as QueryRow[])
-    } catch (e) {
-      setError(String(e))
-    } finally {
-      setLoading(false)
-    }
+    } catch (e) { setError(String(e)) }
+    finally { setLoading(false) }
   }, [kpi.id])
 
   useEffect(() => { fetchData() }, [fetchData])
 
-  const cols      = rows && rows.length > 0 ? Object.keys(rows[0]) : []
-  const numCol    = cols.find((c) => typeof rows![0][c] === "number") ?? cols[cols.length - 1]
-  const labelCol  = cols.find((c) => c !== numCol) ?? cols[0]
-  const isScalar  = !rows || rows.length <= 1 || kpi.chart_type === "number"
-  const trend     = rows && !isScalar ? trendPct(rows, numCol) : null
-  const headlineVal = rows && rows.length > 0 ? rows[isScalar ? 0 : rows.length - 1][numCol] : null
-
-  const chartData = rows?.map((r) => ({
-    label: shortenLabel(r[labelCol]),
-    value: Number(r[numCol] ?? 0),
-  }))
-
-  const gradId = `g-${kpi.id}`
+  const cols     = rows && rows.length > 0 ? Object.keys(rows[0]) : []
+  const numCol   = cols.find((c) => typeof rows![0][c] === "number") ?? cols[cols.length - 1]
+  const labelCol = cols.find((c) => c !== numCol) ?? cols[0]
+  const isScalar = kpi.chart_type === "number" || !rows || rows.length <= 1
+  const trend    = rows && !isScalar ? trendPct(rows, numCol) : null
+  const headline = rows && rows.length > 0 ? rows[isScalar ? 0 : rows.length - 1][numCol] : null
+  const chartData = rows?.map((r) => ({ label: shortenLabel(r[labelCol]), value: Number(r[numCol] ?? 0) }))
 
   return (
     <Link
       href={`/w/${workspaceSlug}/kpis/${kpi.id}`}
-      className="group block bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+      className="group"
+      style={{
+        display: "block", textDecoration: "none",
+        borderRadius: "16px", overflow: "hidden",
+        background: "white",
+        border: "1px solid rgba(15,23,42,0.08)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.04), 0 6px 20px rgba(0,0,0,0.06)",
+        transition: "all 0.2s ease",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.transform = "translateY(-3px)"
+        ;(e.currentTarget as HTMLElement).style.boxShadow = `0 8px 24px rgba(0,0,0,0.08), 0 24px 48px rgba(0,0,0,0.1), 0 0 0 1px rgba(15,23,42,0.06)`
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.transform = "translateY(0)"
+        ;(e.currentTarget as HTMLElement).style.boxShadow = "0 1px 3px rgba(0,0,0,0.04), 0 6px 20px rgba(0,0,0,0.06)"
+      }}
     >
-      {/* Top row: icon + name + trend badge + refresh */}
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className={`w-8 h-8 rounded-xl ${accent.iconBg} flex items-center justify-center flex-shrink-0 ${accent.iconColor}`}>
-            {chartIcon(kpi.chart_type)}
-          </div>
-          <span className="font-semibold text-slate-800 text-sm leading-tight truncate">
+      {/* Gradient header */}
+      <div style={{
+        background: `linear-gradient(135deg, ${grad.from} 0%, ${grad.to} 100%)`,
+        padding: "18px 18px 16px",
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* Decorative orb */}
+        <div style={{
+          position: "absolute", top: "-20px", right: "-20px",
+          width: "80px", height: "80px", borderRadius: "50%",
+          background: "rgba(255,255,255,0.08)",
+          pointerEvents: "none",
+        }} />
+
+        {/* Top row */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px", marginBottom: "12px" }}>
+          <span style={{ fontSize: "12px", fontWeight: 500, color: "rgba(255,255,255,0.65)", lineHeight: "1.3", flex: 1 }}>
             {kpi.name}
           </span>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+            {trend !== null && (
+              <span style={{
+                display: "inline-flex", alignItems: "center", gap: "3px",
+                fontSize: "11px", fontWeight: 700,
+                color: trend >= 0 ? "#bbf7d0" : "#fecaca",
+                background: trend >= 0 ? "rgba(187,247,208,0.15)" : "rgba(254,202,202,0.15)",
+                padding: "2px 7px", borderRadius: "99px",
+              }}>
+                {trend >= 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+                {Math.abs(trend).toFixed(1)}%
+              </span>
+            )}
+            <button
+              onClick={(e) => { e.preventDefault(); fetchData() }}
+              style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", padding: "2px", display: "flex" }}
+            >
+              <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          {trend !== null && (
-            <span className={`flex items-center gap-0.5 text-xs font-semibold px-1.5 py-0.5 rounded-md ${
-              trend >= 0
-                ? "bg-emerald-50 text-emerald-600"
-                : "bg-red-50 text-red-600"
-            }`}>
-              {trend >= 0
-                ? <TrendingUp size={11} />
-                : <TrendingDown size={11} />}
-              {Math.abs(trend).toFixed(1)}%
-            </span>
-          )}
-          <button
-            onClick={(e) => { e.preventDefault(); fetchData() }}
-            className="text-slate-300 hover:text-slate-500 transition-colors p-1"
-            title="Refresh"
-          >
-            <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
-          </button>
-        </div>
+
+        {/* Headline */}
+        {loading ? (
+          <div style={{ height: "36px", background: "rgba(255,255,255,0.12)", borderRadius: "8px", width: "120px" }} />
+        ) : error ? (
+          <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.5)" }}>Query failed</div>
+        ) : (
+          <>
+            <div style={{ fontSize: "32px", fontWeight: 800, color: "#ffffff", lineHeight: 1, letterSpacing: "-1px", fontVariantNumeric: "tabular-nums" }}>
+              {fmt(headline)}
+            </div>
+            <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", marginTop: "4px" }}>
+              {(numCol ?? "").replace(/_/g, " ")}
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Headline number */}
-      {loading ? (
-        <div className="space-y-2 mb-4">
-          <div className="h-8 w-32 bg-slate-100 rounded animate-pulse" />
-          <div className="h-4 w-24 bg-slate-50 rounded animate-pulse" />
-        </div>
-      ) : error ? (
-        <div className="flex items-start gap-1.5 text-red-600 text-xs bg-red-50 rounded-xl p-3 mb-3">
-          <AlertCircle size={13} className="mt-0.5 flex-shrink-0" />
-          <span className="font-mono break-all">{error}</span>
-        </div>
-      ) : (
-        <div className="mb-3">
-          <div className="text-2xl font-bold text-slate-900 tabular-nums leading-none">
-            {fmt(headlineVal)}
-          </div>
-          <div className="text-xs text-slate-400 mt-1">
-            {numCol.replace(/_/g, " ")}
-          </div>
-        </div>
-      )}
+      {/* Chart / body */}
+      <div style={{ background: "white", padding: "0" }}>
+        {loading && (
+          <div style={{ height: "80px", background: "linear-gradient(to right, #f8fafc, #f1f5f9, #f8fafc)", animation: "pulse 1.5s infinite" }} />
+        )}
 
-      {/* Sparkline — hidden for number KPIs or errors */}
-      {!loading && !error && rows && rows.length > 1 && kpi.chart_type !== "number" && (
-        <div className="h-14 -mx-1">
-          <ResponsiveContainer width="100%" height="100%">
-            {kpi.chart_type === "bar" ? (
-              <BarChart data={chartData} margin={{ top: 2, right: 2, left: 2, bottom: 0 }} barCategoryGap="30%">
-                <Bar dataKey="value" fill={accent.fill} radius={[2, 2, 0, 0]} />
-                <Tooltip
-                  cursor={false}
-                  contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid #f1f5f9", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-                  formatter={(v: unknown) => [fmt(v), numCol.replace(/_/g, " ")]}
-                  labelFormatter={String}
-                />
-              </BarChart>
-            ) : kpi.chart_type === "area" ? (
-              <AreaChart data={chartData} margin={{ top: 2, right: 2, left: 2, bottom: 0 }}>
-                <defs>
-                  <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor={accent.fill} stopOpacity={0.3} />
-                    <stop offset="100%" stopColor={accent.fill} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <Area type="monotone" dataKey="value" stroke={accent.stroke} strokeWidth={2} fill={`url(#${gradId})`} dot={false} />
-                <Tooltip
-                  cursor={false}
-                  contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid #f1f5f9", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-                  formatter={(v: unknown) => [fmt(v), numCol.replace(/_/g, " ")]}
-                  labelFormatter={String}
-                />
-              </AreaChart>
-            ) : (
-              <LineChart data={chartData} margin={{ top: 2, right: 2, left: 2, bottom: 0 }}>
-                <defs>
-                  <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor={accent.fill} stopOpacity={0.15} />
-                    <stop offset="100%" stopColor={accent.fill} stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <Line type="monotone" dataKey="value" stroke={accent.stroke} strokeWidth={2} dot={false} />
-                <Tooltip
-                  cursor={false}
-                  contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid #f1f5f9", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-                  formatter={(v: unknown) => [fmt(v), numCol.replace(/_/g, " ")]}
-                  labelFormatter={String}
-                />
-              </LineChart>
-            )}
-          </ResponsiveContainer>
-        </div>
-      )}
+        {!loading && error && (
+          <div style={{ padding: "12px 18px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <AlertCircle size={13} color="#ef4444" />
+            <span style={{ fontSize: "11px", color: "#94a3b8", fontFamily: "monospace" }}>{error.slice(0, 60)}</span>
+          </div>
+        )}
 
-      {/* Description */}
-      <p className="text-xs text-slate-400 leading-relaxed mt-3 line-clamp-2">
-        {kpi.description}
-      </p>
+        {!loading && !error && rows && rows.length > 1 && kpi.chart_type !== "number" && (
+          <div style={{ height: "80px", paddingTop: "4px" }}>
+            <ResponsiveContainer width="100%" height="100%">
+              {kpi.chart_type === "bar" ? (
+                <BarChart data={chartData} margin={{ top: 4, right: 4, left: 4, bottom: 0 }} barCategoryGap="30%">
+                  <Bar dataKey="value" fill={color} radius={[3, 3, 0, 0]} opacity={0.9} />
+                  <Tooltip content={<CustomTooltip />} cursor={false} />
+                </BarChart>
+              ) : (
+                <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id={`g-${kpi.id}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={color} stopOpacity={0.25} />
+                      <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+                    </linearGradient>
+                  </defs>
+                  <Area type="monotone" dataKey="value" stroke={color} strokeWidth={2} fill={`url(#g-${kpi.id})`} dot={false} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(255,255,255,0.1)", strokeWidth: 1 }} />
+                </AreaChart>
+              )}
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {!loading && !error && rows && (rows.length <= 1 || kpi.chart_type === "number") && (
+          <div style={{ height: "60px" }} />
+        )}
+      </div>
+
+      {/* Footer */}
+      <div style={{
+        padding: "10px 18px",
+        borderTop: "1px solid rgba(15,23,42,0.06)",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        background: "#fafafa",
+      }}>
+        <span style={{ fontSize: "11px", color: "#94a3b8" }}>
+          {!loading && !error && rows ? `${rows.length} data point${rows.length !== 1 ? "s" : ""}` : ""}
+        </span>
+        <span style={{
+          fontSize: "11px", fontWeight: 600, color: "#3b82f6",
+          display: "flex", alignItems: "center", gap: "3px",
+          transition: "gap 0.15s",
+        }}>
+          View details
+          <ArrowRight size={11} />
+        </span>
+      </div>
     </Link>
   )
 }

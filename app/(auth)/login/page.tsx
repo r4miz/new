@@ -4,7 +4,20 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
-import { Loader2 } from "lucide-react"
+import { Loader2, ArrowRight } from "lucide-react"
+
+const inputStyle: React.CSSProperties = {
+  width: "100%", padding: "11px 14px",
+  border: "1.5px solid #e2e8f0", borderRadius: "10px",
+  fontSize: "14px", color: "#0f172a", outline: "none",
+  transition: "border-color 0.15s, box-shadow 0.15s",
+  background: "white", boxSizing: "border-box",
+}
+
+const labelStyle: React.CSSProperties = {
+  display: "block", fontSize: "12px", fontWeight: 600,
+  color: "#374151", marginBottom: "6px", letterSpacing: "0.02em",
+}
 
 export default function LoginPage() {
   const router = useRouter()
@@ -12,65 +25,77 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [error,    setError]    = useState<string | null>(null)
   const [loading,  setLoading]  = useState(false)
+  const [focused,  setFocused]  = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError(null)
-    setLoading(true)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setError(null); setLoading(true)
+    const { error } = await createClient().auth.signInWithPassword({ email, password })
     if (error) { setError(error.message); setLoading(false); return }
-    router.push("/onboarding")
-    router.refresh()
+    router.push("/onboarding"); router.refresh()
   }
+
+  const focusedStyle = { borderColor: "#3b82f6", boxShadow: "0 0 0 3px rgba(59,130,246,0.12)" }
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back</h1>
-        <p className="text-slate-500 text-sm mt-1.5">Sign in to your workspace</p>
-      </div>
+      <h1 style={{ fontSize: "26px", fontWeight: 800, color: "#0f172a", margin: "0 0 6px", letterSpacing: "-0.6px" }}>
+        Welcome back
+      </h1>
+      <p style={{ fontSize: "14px", color: "#64748b", margin: "0 0 32px" }}>
+        Sign in to your workspace
+      </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
         <div>
-          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-            Email address
-          </label>
+          <label style={labelStyle}>Email address</label>
           <input
             type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-            className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
             placeholder="you@company.com"
+            style={{ ...inputStyle, ...(focused === "email" ? focusedStyle : {}) }}
+            onFocus={() => setFocused("email")} onBlur={() => setFocused(null)}
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-            Password
-          </label>
+          <label style={labelStyle}>Password</label>
           <input
             type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
             placeholder="••••••••"
+            style={{ ...inputStyle, ...(focused === "password" ? focusedStyle : {}) }}
+            onFocus={() => setFocused("password")} onBlur={() => setFocused(null)}
           />
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+          <div style={{
+            background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px",
+            padding: "10px 14px", fontSize: "13px", color: "#dc2626",
+          }}>
             {error}
           </div>
         )}
 
         <button
           type="submit" disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2 mt-2"
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+            padding: "12px 20px", borderRadius: "10px",
+            background: loading ? "#93c5fd" : "linear-gradient(135deg, #2563eb, #3b82f6)",
+            color: "white", border: "none", cursor: loading ? "not-allowed" : "pointer",
+            fontSize: "14px", fontWeight: 700, letterSpacing: "-0.1px",
+            boxShadow: "0 4px 12px rgba(37,99,235,0.3)",
+            transition: "all 0.15s",
+          }}
         >
-          {loading && <Loader2 size={14} className="animate-spin" />}
+          {loading ? <Loader2 size={15} className="animate-spin" /> : null}
           {loading ? "Signing in…" : "Sign in"}
+          {!loading && <ArrowRight size={15} />}
         </button>
       </form>
 
-      <p className="text-center text-sm text-slate-500 mt-6">
+      <p style={{ textAlign: "center", fontSize: "13px", color: "#94a3b8", marginTop: "24px" }}>
         Don&apos;t have an account?{" "}
-        <Link href="/signup" className="text-blue-600 font-medium hover:text-blue-700">
+        <Link href="/signup" style={{ color: "#2563eb", fontWeight: 600, textDecoration: "none" }}>
           Start free trial →
         </Link>
       </p>

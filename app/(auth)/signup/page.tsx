@@ -4,22 +4,36 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
-import { Loader2 } from "lucide-react"
+import { Loader2, ArrowRight, Check } from "lucide-react"
+
+const inputStyle: React.CSSProperties = {
+  width: "100%", padding: "11px 14px",
+  border: "1.5px solid #e2e8f0", borderRadius: "10px",
+  fontSize: "14px", color: "#0f172a", outline: "none",
+  transition: "border-color 0.15s, box-shadow 0.15s",
+  background: "white", boxSizing: "border-box",
+}
+
+const labelStyle: React.CSSProperties = {
+  display: "block", fontSize: "12px", fontWeight: 600,
+  color: "#374151", marginBottom: "6px", letterSpacing: "0.02em",
+}
+
+const focusedStyle = { borderColor: "#3b82f6", boxShadow: "0 0 0 3px rgba(59,130,246,0.12)" }
 
 export default function SignupPage() {
-  const router = useRouter()
+  const router  = useRouter()
   const [fullName, setFullName] = useState("")
   const [email,    setEmail]    = useState("")
   const [password, setPassword] = useState("")
   const [error,    setError]    = useState<string | null>(null)
   const [loading,  setLoading]  = useState(false)
+  const [focused,  setFocused]  = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError(null)
-    setLoading(true)
-    const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
+    setError(null); setLoading(true)
+    const { error } = await createClient().auth.signUp({
       email, password,
       options: { data: { full_name: fullName }, emailRedirectTo: `${location.origin}/api/auth/callback` },
     })
@@ -27,69 +41,74 @@ export default function SignupPage() {
     router.push("/onboarding")
   }
 
+  const getStyle = (field: string) => ({ ...inputStyle, ...(focused === field ? focusedStyle : {}) })
+
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Create your account</h1>
-        <p className="text-slate-500 text-sm mt-1.5">14-day free trial · No credit card required</p>
+      <h1 style={{ fontSize: "26px", fontWeight: 800, color: "#0f172a", margin: "0 0 6px", letterSpacing: "-0.6px" }}>
+        Create your account
+      </h1>
+      <p style={{ fontSize: "14px", color: "#64748b", margin: "0 0 8px" }}>
+        Start your 14-day free trial
+      </p>
+
+      {/* Trust bullets */}
+      <div style={{ display: "flex", gap: "16px", marginBottom: "28px" }}>
+        {["No credit card", "Cancel anytime", "Full access"].map((t) => (
+          <div key={t} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            <Check size={12} color="#10b981" />
+            <span style={{ fontSize: "11px", color: "#64748b", fontWeight: 500 }}>{t}</span>
+          </div>
+        ))}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         <div>
-          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-            Full name
-          </label>
-          <input
-            type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)}
-            className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Jane Smith"
-          />
+          <label style={labelStyle}>Full name</label>
+          <input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)}
+            placeholder="Jane Smith" style={getStyle("name")}
+            onFocus={() => setFocused("name")} onBlur={() => setFocused(null)} />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-            Work email
-          </label>
-          <input
-            type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-            className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="jane@company.com"
-          />
+          <label style={labelStyle}>Work email</label>
+          <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+            placeholder="jane@company.com" style={getStyle("email")}
+            onFocus={() => setFocused("email")} onBlur={() => setFocused(null)} />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-            Password
-          </label>
-          <input
-            type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="At least 8 characters"
-          />
+          <label style={labelStyle}>Password</label>
+          <input type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)}
+            placeholder="At least 8 characters" style={getStyle("password")}
+            onFocus={() => setFocused("password")} onBlur={() => setFocused(null)} />
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", padding: "10px 14px", fontSize: "13px", color: "#dc2626" }}>
             {error}
           </div>
         )}
 
         <button
           type="submit" disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-semibold py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2 mt-2"
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+            padding: "12px 20px", borderRadius: "10px",
+            background: loading ? "#93c5fd" : "linear-gradient(135deg, #2563eb, #3b82f6)",
+            color: "white", border: "none", cursor: loading ? "not-allowed" : "pointer",
+            fontSize: "14px", fontWeight: 700, letterSpacing: "-0.1px",
+            boxShadow: "0 4px 12px rgba(37,99,235,0.3)",
+            transition: "all 0.15s",
+          }}
         >
-          {loading && <Loader2 size={14} className="animate-spin" />}
-          {loading ? "Creating account…" : "Start free trial →"}
+          {loading ? <Loader2 size={15} className="animate-spin" /> : null}
+          {loading ? "Creating account…" : "Start free trial"}
+          {!loading && <ArrowRight size={15} />}
         </button>
       </form>
 
-      <p className="text-center text-xs text-slate-400 mt-5 leading-relaxed">
-        By signing up you agree to our{" "}
-        <span className="text-slate-500">Terms of Service</span> and{" "}
-        <span className="text-slate-500">Privacy Policy</span>.
-      </p>
-
-      <p className="text-center text-sm text-slate-500 mt-4">
+      <p style={{ textAlign: "center", fontSize: "13px", color: "#94a3b8", marginTop: "20px" }}>
         Already have an account?{" "}
-        <Link href="/login" className="text-blue-600 font-medium hover:text-blue-700">
+        <Link href="/login" style={{ color: "#2563eb", fontWeight: 600, textDecoration: "none" }}>
           Sign in
         </Link>
       </p>
