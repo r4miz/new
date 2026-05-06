@@ -43,6 +43,7 @@ export default async function DashboardPage({
         padding: "28px 36px",
         flexShrink: 0,
       }}>
+        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
           <div>
             <h1 style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.5px" }}>
@@ -98,23 +99,26 @@ export default async function DashboardPage({
             </div>
           ))}
         </div>
+        </div>
       </div>
 
       {/* KPI grid */}
       <div style={{ flex: 1, padding: "32px 36px" }}>
-        {kpis.length === 0 ? (
-          <EmptyDashboard workspaceSlug={workspaceSlug} />
-        ) : (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-            gap: "20px",
-          }}>
-            {kpis.map((kpi) => (
-              <KpiTile key={kpi.id} kpi={kpi} workspaceSlug={workspaceSlug} />
-            ))}
-          </div>
-        )}
+        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+          {kpis.length === 0 ? (
+            <EmptyDashboard workspaceSlug={workspaceSlug} />
+          ) : (
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+              gap: "20px",
+            }}>
+              {kpis.map((kpi) => (
+                <KpiTile key={kpi.id} kpi={kpi} workspaceSlug={workspaceSlug} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

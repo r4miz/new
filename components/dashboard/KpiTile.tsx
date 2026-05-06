@@ -196,9 +196,9 @@ export function KpiTile({ kpi, workspaceSlug }: Props) {
           background: "#fafafa",
         }}>
           <span style={{ fontSize: "12px", color: "#d1d5db" }}>
-            {!loading && !error && rows ? `${rows.length} point${rows.length !== 1 ? "s" : ""}` : ""}
+            {!loading && !error && rows && rows.length > 1 ? `${rows.length} data points` : ""}
           </span>
-          <span style={{ fontSize: "12px", fontWeight: 600, color: color, display: "flex", alignItems: "center", gap: "4px" }}>
+          <span style={{ fontSize: "12px", fontWeight: 600, color: color }}>
             View details →
           </span>
         </div>
