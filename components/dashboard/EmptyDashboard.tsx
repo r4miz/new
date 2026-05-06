@@ -1,24 +1,39 @@
 import Link from "next/link"
-import { BarChart3, ArrowRight } from "lucide-react"
+import { Upload, Plug, ArrowRight } from "lucide-react"
 
 export function EmptyDashboard({ workspaceSlug }: { workspaceSlug: string }) {
   return (
-    <div className="border-2 border-dashed border-slate-200 rounded-xl p-12 text-center">
-      <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mx-auto mb-4">
-        <BarChart3 size={24} className="text-blue-600" />
+    <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+      <div className="relative mb-8">
+        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
+          <Upload size={26} className="text-white" />
+        </div>
+        <div className="absolute -bottom-2 -right-3 w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center shadow-md">
+          <Plug size={14} className="text-white" />
+        </div>
       </div>
-      <h2 className="text-lg font-semibold text-slate-900 mb-2">No KPIs yet</h2>
-      <p className="text-slate-500 text-sm mb-6 max-w-sm mx-auto">
-        Upload a CSV and our AI will analyze your data and propose the metrics
-        that matter most for your business.
+      <h2 className="text-xl font-bold text-slate-900 mb-2">No KPIs yet</h2>
+      <p className="text-slate-500 text-sm leading-relaxed max-w-sm mb-8">
+        Upload a CSV or connect an integration. Our AI will analyze your data
+        and build a full KPI dashboard in under a minute.
       </p>
-      <Link
-        href={`/w/${workspaceSlug}/data/upload`}
-        className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition"
-      >
-        Connect your first data source
-        <ArrowRight size={16} />
-      </Link>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Link
+          href={`/w/${workspaceSlug}/data/upload`}
+          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-sm shadow-blue-200"
+        >
+          <Upload size={15} />
+          Upload a CSV
+          <ArrowRight size={14} />
+        </Link>
+        <Link
+          href={`/w/${workspaceSlug}/integrations`}
+          className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+        >
+          <Plug size={15} />
+          Connect an integration
+        </Link>
+      </div>
     </div>
   )
 }

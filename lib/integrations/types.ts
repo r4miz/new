@@ -1,4 +1,11 @@
-export type IntegrationProvider = "google_sheets" | "shopify"
+export type IntegrationProvider =
+  | "google_sheets"
+  | "shopify"
+  | "woocommerce"
+  | "hubspot"
+  | "stripe_data"
+  | "airtable"
+
 export type IntegrationStatus  = "pending" | "active" | "error" | "paused"
 export type SyncFrequency      = "manual" | "daily" | "weekly"
 
@@ -17,9 +24,8 @@ export interface Integration {
   created_at:     string
 }
 
-// Shape that the sync engine works with
 export interface RawSyncData {
-  name:    string   // dataset display name
+  name:    string
   headers: string[]
   rows:    Record<string, string>[]
 }
