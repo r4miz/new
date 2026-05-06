@@ -6,7 +6,7 @@ import { getKpiProposals } from "@/lib/db/kpis"
 import { KpiTile } from "@/components/dashboard/KpiTile"
 import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard"
 import Link from "next/link"
-import { Plus } from "lucide-react"
+import { Plus, BarChart2, Database, Plug } from "lucide-react"
 
 export default async function DashboardPage({
   params,
@@ -27,65 +27,89 @@ export default async function DashboardPage({
     adminClient.from("integrations").select("*", { count: "exact", head: true }).eq("workspace_id", workspace.id).eq("status", "active"),
   ])
 
+  const stats = [
+    { label: "KPIs tracked",      value: kpis.length,   Icon: BarChart2, color: "#0ea5e9" },
+    { label: "Datasets",          value: dsCount ?? 0,  Icon: Database,  color: "#8b5cf6" },
+    { label: "Live integrations", value: intCount ?? 0, Icon: Plug,      color: "#10b981" },
+  ]
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0, background: "#f8fafc" }}>
-      {/* Page header */}
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100%", background: "#f1f5f9" }}>
+
+      {/* Header */}
       <div style={{
         background: "white",
-        borderBottom: "1px solid #e2e8f0",
-        padding: "24px 32px",
+        borderBottom: "1px solid #e5e7eb",
+        padding: "28px 36px",
         flexShrink: 0,
       }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
           <div>
-            <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#0f172a", margin: 0, letterSpacing: "-0.4px" }}>
+            <h1 style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.5px" }}>
               Dashboard
             </h1>
-            <p style={{ fontSize: "13px", color: "#94a3b8", margin: "3px 0 0" }}>
-              {workspace.industry ? `${workspace.industry} · ${workspace.name}` : workspace.name}
+            <p style={{ margin: "5px 0 0", fontSize: "13.5px", color: "#6b7280" }}>
+              {workspace.industry
+                ? `${workspace.industry} analytics · ${workspace.name}`
+                : `AI-powered analytics · ${workspace.name}`}
             </p>
           </div>
-          <Link href={`/w/${workspaceSlug}/data/upload`} style={{
-            display: "inline-flex", alignItems: "center", gap: "6px",
-            background: "#0ea5e9", color: "white",
-            fontSize: "13.5px", fontWeight: 600,
-            padding: "9px 18px", borderRadius: "8px",
-            textDecoration: "none", transition: "background 0.15s",
-          }}>
-            <Plus size={14} strokeWidth={2.5} />
+          <Link
+            href={`/w/${workspaceSlug}/data/upload`}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "7px",
+              background: "#0f172a", color: "white",
+              fontSize: "13.5px", fontWeight: 600,
+              padding: "10px 20px", borderRadius: "8px",
+              textDecoration: "none",
+            }}
+          >
+            <Plus size={15} strokeWidth={2.5} />
             Add data
           </Link>
         </div>
 
-        {/* Stats */}
-        <div style={{ display: "flex", gap: "24px" }}>
-          {[
-            { label: "KPIs tracked",      value: kpis.length   },
-            { label: "Datasets",          value: dsCount ?? 0  },
-            { label: "Live integrations", value: intCount ?? 0 },
-          ].map((s, i) => (
-            <div key={s.label} style={{
-              display: "flex", alignItems: "center", gap: "10px",
-              paddingRight: i < 2 ? "24px" : 0,
-              borderRight: i < 2 ? "1px solid #f1f5f9" : "none",
+        {/* Stats row */}
+        <div style={{ display: "flex", gap: "12px" }}>
+          {stats.map(({ label, value, Icon, color }) => (
+            <div key={label} style={{
+              display: "flex", alignItems: "center", gap: "14px",
+              background: "#f8fafc",
+              border: "1px solid #e5e7eb",
+              borderRadius: "10px",
+              padding: "14px 20px",
+              minWidth: "160px",
             }}>
-              <span style={{ fontSize: "24px", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.8px", lineHeight: 1 }}>
-                {s.value}
-              </span>
-              <span style={{ fontSize: "12.5px", color: "#94a3b8", lineHeight: 1.3, maxWidth: "80px" }}>
-                {s.label}
-              </span>
+              <div style={{
+                width: "36px", height: "36px", borderRadius: "8px",
+                background: color + "18",
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              }}>
+                <Icon size={17} color={color} />
+              </div>
+              <div>
+                <div style={{ fontSize: "26px", fontWeight: 800, color: "#0f172a", lineHeight: 1, letterSpacing: "-0.8px" }}>
+                  {value}
+                </div>
+                <div style={{ fontSize: "12px", color: "#9ca3af", marginTop: "3px" }}>
+                  {label}
+                </div>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
       {/* KPI grid */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "28px 32px" }}>
+      <div style={{ flex: 1, padding: "32px 36px" }}>
         {kpis.length === 0 ? (
           <EmptyDashboard workspaceSlug={workspaceSlug} />
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+            gap: "20px",
+          }}>
             {kpis.map((kpi) => (
               <KpiTile key={kpi.id} kpi={kpi} workspaceSlug={workspaceSlug} />
             ))}

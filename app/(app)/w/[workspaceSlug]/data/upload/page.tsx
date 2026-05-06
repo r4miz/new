@@ -17,14 +17,20 @@ export default async function UploadPage({
   if (!workspace) redirect("/onboarding")
 
   return (
-    <div className="p-6 max-w-2xl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Add data</h1>
-        <p className="text-slate-500 text-sm mt-1">
-          Upload a CSV and our AI will analyze it and propose a KPI for your dashboard.
+    <div style={{ minHeight: "100%", background: "#f1f5f9" }}>
+      {/* Page header */}
+      <div style={{ background: "white", borderBottom: "1px solid #e5e7eb", padding: "28px 36px" }}>
+        <h1 style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.5px" }}>
+          Add data
+        </h1>
+        <p style={{ margin: "5px 0 0", fontSize: "13.5px", color: "#6b7280" }}>
+          Upload a CSV and our AI will analyze your data and generate a full KPI dashboard.
         </p>
       </div>
-      <UploadFlow workspace={workspace} />
+
+      <div style={{ padding: "36px", maxWidth: "560px" }}>
+        <UploadFlow workspace={workspace} />
+      </div>
     </div>
   )
 }
