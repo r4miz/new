@@ -3,36 +3,37 @@
 import Link from "next/link"
 import { Zap } from "lucide-react"
 
-interface Props {
-  daysLeft: number
-  workspaceSlug: string
-}
+interface Props { daysLeft: number; workspaceSlug: string }
 
 export function TrialBanner({ daysLeft, workspaceSlug }: Props) {
   const urgent = daysLeft <= 3
+  const bg     = urgent ? "rgba(239,68,68,0.12)"  : "rgba(245,158,11,0.08)"
+  const border = urgent ? "rgba(239,68,68,0.25)"  : "rgba(245,158,11,0.2)"
+  const color  = urgent ? "#fca5a5"                : "#fcd34d"
+  const btnBg  = urgent ? "rgba(239,68,68,0.2)"   : "rgba(245,158,11,0.15)"
+  const btnCol = urgent ? "#fca5a5"                : "#fcd34d"
 
   return (
-    <div className={`flex items-center justify-between gap-4 px-6 py-2.5 text-sm flex-shrink-0 ${
-      urgent
-        ? "bg-red-500 text-white"
-        : "bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100 text-amber-900"
-    }`}>
-      <div className="flex items-center gap-2">
-        <Zap size={14} className={urgent ? "text-yellow-300" : "text-amber-500"} fill="currentColor" />
-        <span>
+    <div style={{
+      display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px",
+      padding: "10px 24px", flexShrink: 0,
+      background: bg, borderBottom: `1px solid ${border}`,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <Zap size={13} color={color} fill={color} />
+        <span style={{ fontSize: "13px", color }}>
           <strong>{daysLeft} day{daysLeft !== 1 ? "s" : ""}</strong> left in your free trial
-          {urgent ? " — your dashboard will pause when it ends." : "."}
+          {urgent ? " — upgrade now to keep access." : "."}
         </span>
       </div>
-      <Link
-        href={`/w/${workspaceSlug}/settings/billing`}
-        className={`flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg transition whitespace-nowrap ${
-          urgent
-            ? "bg-white text-red-600 hover:bg-red-50"
-            : "bg-amber-500 text-white hover:bg-amber-600"
-        }`}
-      >
-        Upgrade now →
+      <Link href={`/w/${workspaceSlug}/settings/billing`} style={{
+        flexShrink: 0, fontSize: "12px", fontWeight: 700,
+        padding: "5px 14px", borderRadius: "6px",
+        background: btnBg, color: btnCol,
+        textDecoration: "none", whiteSpace: "nowrap",
+        border: `1px solid ${border}`,
+      }}>
+        Upgrade →
       </Link>
     </div>
   )

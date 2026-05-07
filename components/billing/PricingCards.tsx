@@ -33,43 +33,37 @@ export function PricingCards({ workspaceId, currentPlan }: Props) {
   }
 
   return (
-    <div className="w-full">
-      {/* Billing period toggle */}
-      <div className="flex justify-center mb-8">
-        <div className="inline-flex items-center bg-slate-100 rounded-xl p-1 gap-1">
-          <button
-            onClick={() => setPeriod("monthly")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              period === "monthly"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setPeriod("yearly")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-              period === "yearly"
-                ? "bg-white text-slate-900 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            Yearly
-            <span className="text-xs bg-emerald-100 text-emerald-700 font-semibold px-1.5 py-0.5 rounded-md">
-              2 months free
-            </span>
-          </button>
+    <div style={{ width: "100%" }}>
+      {/* Period toggle */}
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: "32px" }}>
+        <div style={{ display: "inline-flex", alignItems: "center", background: "#141d2e", borderRadius: "12px", padding: "4px", gap: "4px", border: "1px solid rgba(255,255,255,0.07)" }}>
+          {(["monthly", "yearly"] as BillingPeriod[]).map((p) => (
+            <button key={p} onClick={() => setPeriod(p)} style={{
+              padding: "8px 18px", borderRadius: "8px", fontSize: "13px", fontWeight: 600,
+              border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px",
+              background: period === p ? "#0d1117" : "transparent",
+              color: period === p ? "#f8fafc" : "#475569",
+              boxShadow: period === p ? "0 1px 3px rgba(0,0,0,0.4)" : "none",
+              transition: "all 0.15s",
+            }}>
+              {p === "yearly" ? "Yearly" : "Monthly"}
+              {p === "yearly" && (
+                <span style={{ fontSize: "11px", fontWeight: 700, padding: "2px 8px", borderRadius: "6px", background: "rgba(16,185,129,0.15)", color: "#10b981" }}>
+                  2 months free
+                </span>
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
       {error && (
-        <div className="mb-6 text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-center">
+        <div style={{ marginBottom: "20px", fontSize: "13px", color: "#fca5a5", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: "10px", padding: "12px 16px", textAlign: "center" }}>
           {error}
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl mx-auto">
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px", maxWidth: "680px", margin: "0 auto" }}>
         {(Object.entries(PLANS) as [PlanKey, typeof PLANS[PlanKey]][]).map(([key, plan]) => {
           const isPopular = plan.popular
           const isCurrent = currentPlan === key
@@ -77,82 +71,78 @@ export function PricingCards({ workspaceId, currentPlan }: Props) {
           const pricing   = plan[period]
 
           return (
-            <div
-              key={key}
-              className={`relative flex flex-col rounded-2xl bg-white transition-all duration-200 ${
-                isPopular
-                  ? "border-2 border-blue-500 shadow-xl shadow-blue-100"
-                  : "border border-slate-200 shadow-sm hover:shadow-md"
-              }`}
-            >
+            <div key={key} style={{
+              position: "relative", display: "flex", flexDirection: "column",
+              borderRadius: "16px", overflow: "visible",
+              background: "#0d1117",
+              border: isPopular ? "1.5px solid #0ea5e9" : "1px solid rgba(255,255,255,0.07)",
+              boxShadow: isPopular ? "0 0 32px rgba(14,165,233,0.12)" : "none",
+            }}>
               {isPopular && (
-                <div className="absolute -top-3.5 left-0 right-0 flex justify-center">
-                  <span className="inline-flex items-center gap-1 bg-blue-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                    <Sparkles size={11} />
-                    Most popular
+                <div style={{ position: "absolute", top: "-14px", left: 0, right: 0, display: "flex", justifyContent: "center" }}>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "5px", background: "#0ea5e9", color: "white", fontSize: "11px", fontWeight: 700, padding: "4px 12px", borderRadius: "99px" }}>
+                    <Sparkles size={11} /> Most popular
                   </span>
                 </div>
               )}
 
-              <div className={`p-6 border-b ${isPopular ? "border-blue-100" : "border-slate-100"}`}>
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-bold text-slate-900 text-base">{plan.name}</h3>
+              <div style={{ padding: "24px", borderBottom: `1px solid ${isPopular ? "rgba(14,165,233,0.15)" : "rgba(255,255,255,0.06)"}` }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                  <h3 style={{ margin: 0, fontSize: "15px", fontWeight: 700, color: "#f8fafc" }}>{plan.name}</h3>
                   {isCurrent && (
-                    <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium px-2 py-0.5 rounded-full">
+                    <span style={{ fontSize: "11px", fontWeight: 600, padding: "3px 10px", borderRadius: "99px", background: "rgba(16,185,129,0.12)", color: "#10b981", border: "1px solid rgba(16,185,129,0.2)" }}>
                       Current
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-500 leading-relaxed mb-4">{plan.description}</p>
+                <p style={{ margin: "0 0 20px", fontSize: "12px", color: "#475569", lineHeight: 1.6 }}>{plan.description}</p>
 
-                <div className="flex items-end gap-1">
-                  <span className="text-4xl font-extrabold text-slate-900 tracking-tight">
-                    ${period === "yearly" ? pricing.price : pricing.price}
+                <div style={{ display: "flex", alignItems: "flex-end", gap: "4px" }}>
+                  <span style={{ fontSize: "42px", fontWeight: 800, color: "#f8fafc", letterSpacing: "-1px", lineHeight: 1 }}>
+                    ${pricing.price}
                   </span>
-                  <span className="text-slate-400 text-sm mb-1.5">
+                  <span style={{ fontSize: "13px", color: "#475569", marginBottom: "6px" }}>
                     /{period === "yearly" ? "yr" : "mo"}
                   </span>
                 </div>
 
-                {period === "yearly" && "perMonth" in pricing && (
-                  <p className="text-xs text-emerald-600 font-medium mt-1">
+                {"perMonth" in pricing && period === "yearly" ? (
+                  <p style={{ margin: "6px 0 0", fontSize: "12px", color: "#10b981", fontWeight: 500 }}>
                     ${pricing.perMonth}/mo · Save ${pricing.saving} vs monthly
                   </p>
-                )}
-                {period === "monthly" && (
-                  <p className="text-xs text-slate-400 mt-1">Billed monthly · Cancel anytime</p>
+                ) : (
+                  <p style={{ margin: "6px 0 0", fontSize: "12px", color: "#334155" }}>Billed monthly · Cancel anytime</p>
                 )}
               </div>
 
-              <div className="flex-1 p-6">
-                <ul className="space-y-3">
+              <div style={{ flex: 1, padding: "20px 24px" }}>
+                <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "12px" }}>
                   {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2.5 text-sm text-slate-700">
-                      <Check
-                        size={15}
-                        className={`flex-shrink-0 mt-0.5 ${isPopular ? "text-blue-500" : "text-emerald-500"}`}
-                        strokeWidth={2.5}
-                      />
+                    <li key={feature} style={{ display: "flex", alignItems: "flex-start", gap: "10px", fontSize: "13px", color: "#94a3b8" }}>
+                      <Check size={14} color={isPopular ? "#0ea5e9" : "#10b981"} style={{ flexShrink: 0, marginTop: "2px" }} strokeWidth={2.5} />
                       {feature}
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="p-6 pt-0">
+              <div style={{ padding: "0 24px 24px" }}>
                 <button
                   onClick={() => handleUpgrade(key)}
                   disabled={!!loading || isCurrent}
-                  className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-                    isCurrent
-                      ? "bg-slate-100 text-slate-400 cursor-default"
-                      : isPopular
-                      ? "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-                      : "bg-slate-900 hover:bg-slate-800 text-white"
-                  } disabled:opacity-60`}
+                  style={{
+                    width: "100%", padding: "11px 0", borderRadius: "10px", fontSize: "13px",
+                    fontWeight: 700, border: "none", cursor: (loading || isCurrent) ? "default" : "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                    background: isCurrent ? "#141d2e" : isPopular ? "#0ea5e9" : "#1a2540",
+                    color: isCurrent ? "#334155" : "white",
+                    opacity: (loading && !isLoading) ? 0.6 : 1,
+                    transition: "background 0.15s",
+                    boxShadow: isPopular && !isCurrent ? "0 4px 16px rgba(14,165,233,0.25)" : "none",
+                  }}
                 >
-                  {isLoading && <Loader2 size={14} className="animate-spin" />}
-                  {isCurrent ? "Current plan" : isLoading ? "Redirecting…" : plan.popular ? "Get started →" : "Get started"}
+                  {isLoading && <Loader2 size={13} className="animate-spin" />}
+                  {isCurrent ? "Current plan" : isLoading ? "Redirecting…" : "Get started →"}
                 </button>
               </div>
             </div>
@@ -160,7 +150,7 @@ export function PricingCards({ workspaceId, currentPlan }: Props) {
         })}
       </div>
 
-      <p className="text-center text-xs text-slate-400 mt-6">
+      <p style={{ textAlign: "center", fontSize: "12px", color: "#334155", marginTop: "20px" }}>
         No setup fees · Cancel anytime · All major cards accepted
       </p>
     </div>

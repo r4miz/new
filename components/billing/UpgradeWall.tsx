@@ -7,20 +7,23 @@ interface Props {
 
 export function UpgradeWall({ workspace }: Props) {
   return (
-    <div className="flex-1 overflow-auto bg-gradient-to-br from-slate-50 to-blue-50/30">
-      <div className="max-w-4xl mx-auto px-6 py-14">
-        {/* Hero */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-white border border-slate-200 rounded-2xl shadow-sm mb-5">
-            <Lock size={24} className="text-slate-600" />
+    <div style={{ flex: 1, overflowY: "auto", background: "#07090e" }}>
+      <div style={{ maxWidth: "900px", margin: "0 auto", padding: "60px 36px" }}>
+        <div style={{ textAlign: "center", marginBottom: "48px" }}>
+          <div style={{
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            width: "56px", height: "56px", borderRadius: "16px", marginBottom: "20px",
+            background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)",
+          }}>
+            <Lock size={24} color="#0ea5e9" />
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight mb-3">
+          <h1 style={{ margin: "0 0 12px", fontSize: "28px", fontWeight: 800, color: "#f8fafc", letterSpacing: "-0.5px" }}>
             Your free trial has ended
           </h1>
-          <p className="text-slate-500 text-base max-w-md mx-auto leading-relaxed">
+          <p style={{ margin: "0 auto", fontSize: "15px", color: "#475569", maxWidth: "440px", lineHeight: 1.7 }}>
             Choose a plan to restore access to{" "}
-            <span className="font-semibold text-slate-700">{workspace.name}</span> and
-            keep your AI-powered dashboard running.
+            <span style={{ fontWeight: 600, color: "#94a3b8" }}>{workspace.name}</span>{" "}
+            and keep your AI-powered dashboard running.
           </p>
         </div>
 

@@ -4,14 +4,12 @@ import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import type { KpiProposal } from "@/lib/types"
 import { TrendingUp, TrendingDown, RefreshCw, AlertCircle } from "lucide-react"
-import {
-  ResponsiveContainer, AreaChart, Area, BarChart, Bar, LineChart, Line, Tooltip,
-} from "recharts"
+import { ResponsiveContainer, AreaChart, Area, BarChart, Bar, Tooltip } from "recharts"
 
 interface Props { kpi: KpiProposal; workspaceSlug: string }
 type Row = Record<string, unknown>
 
-const TYPE_COLOR: Record<string, string> = {
+const ACCENT: Record<string, string> = {
   line: "#0ea5e9", area: "#8b5cf6", bar: "#f59e0b", number: "#10b981",
 }
 
@@ -31,17 +29,17 @@ function shortLabel(v: unknown): string {
   return s.length > 10 ? s.slice(0, 9) + "…" : s
 }
 
-function trendPct(rows: Row[], col: string): number | null {
+function pctChange(rows: Row[], col: string): number | null {
   if (rows.length < 2) return null
   const v = rows.map(r => Number(r[col] ?? 0))
   const p = v[v.length - 2], c = v[v.length - 1]
   return p === 0 ? null : ((c - p) / Math.abs(p)) * 100
 }
 
-const ChartTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: unknown }>; label?: string }) =>
+const Tip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: unknown }>; label?: string }) =>
   active && payload?.length ? (
-    <div style={{ background: "#1e293b", borderRadius: "6px", padding: "8px 12px", border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.2)" }}>
-      <p style={{ color: "#94a3b8", fontSize: "11px", margin: "0 0 3px", fontWeight: 500 }}>{label}</p>
+    <div style={{ background: "#0d1117", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "8px", padding: "8px 12px" }}>
+      <p style={{ color: "#475569", fontSize: "11px", margin: "0 0 2px" }}>{label}</p>
       <p style={{ color: "#f8fafc", fontSize: "14px", fontWeight: 700, margin: 0 }}>{fmt(payload[0]?.value)}</p>
     </div>
   ) : null
@@ -51,7 +49,7 @@ export function KpiTile({ kpi, workspaceSlug }: Props) {
   const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState<string | null>(null)
 
-  const color  = TYPE_COLOR[kpi.chart_type] ?? "#0ea5e9"
+  const color  = ACCENT[kpi.chart_type] ?? "#0ea5e9"
   const gradId = `g-${kpi.id}`
 
   const load = useCallback(async () => {
@@ -71,89 +69,78 @@ export function KpiTile({ kpi, workspaceSlug }: Props) {
   const numCol  = cols.find(c => typeof rows![0][c] === "number") ?? cols[cols.length - 1]
   const lblCol  = cols.find(c => c !== numCol) ?? cols[0]
   const scalar  = kpi.chart_type === "number" || !rows || rows.length <= 1
-  const pct     = rows && !scalar ? trendPct(rows, numCol) : null
+  const pct     = rows && !scalar ? pctChange(rows, numCol) : null
   const headline = rows?.length ? rows[scalar ? 0 : rows.length - 1][numCol] : null
   const data    = rows?.map(r => ({ l: shortLabel(r[lblCol]), v: Number(r[numCol] ?? 0) }))
 
   return (
     <Link
       href={`/w/${workspaceSlug}/kpis/${kpi.id}`}
-      style={{ display: "block", textDecoration: "none", position: "relative" }}
+      style={{ display: "block", textDecoration: "none", borderRadius: "12px", overflow: "hidden" }}
       onMouseEnter={e => {
         const el = e.currentTarget as HTMLElement
         el.style.transform = "translateY(-2px)"
-        el.style.boxShadow = "0 8px 30px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)"
+        el.style.boxShadow = `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1)`
       }}
       onMouseLeave={e => {
         const el = e.currentTarget as HTMLElement
         el.style.transform = "none"
-        el.style.boxShadow = "0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06)"
+        el.style.boxShadow = "none"
       }}
     >
       <div style={{
-        background: "white",
-        borderRadius: "12px",
-        border: "1px solid #e5e7eb",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.06)",
-        overflow: "hidden",
-        borderLeft: `4px solid ${color}`,
-        transition: "transform 0.18s ease, box-shadow 0.18s ease",
+        background: "#0d1117",
+        border: "1px solid rgba(255,255,255,0.07)",
+        borderRadius: "12px", overflow: "hidden",
+        borderLeft: `3px solid ${color}`,
+        transition: "transform 0.18s, box-shadow 0.18s",
       }}>
 
-        {/* Main content */}
-        <div style={{ padding: "22px 22px 16px" }}>
-          {/* Top row */}
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "18px", gap: "12px" }}>
-            <p style={{
-              margin: 0, fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em",
-              textTransform: "uppercase", color: "#9ca3af",
-            }}>
+        {/* Main */}
+        <div style={{ padding: "20px 20px 14px" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px", marginBottom: "16px" }}>
+            <p style={{ margin: 0, fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#475569" }}>
               {kpi.name}
             </p>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
               {pct !== null && (
                 <span style={{
                   display: "inline-flex", alignItems: "center", gap: "3px",
                   fontSize: "12px", fontWeight: 700,
-                  color: pct >= 0 ? "#059669" : "#dc2626",
-                  background: pct >= 0 ? "#ecfdf5" : "#fef2f2",
-                  border: `1px solid ${pct >= 0 ? "#a7f3d0" : "#fecaca"}`,
-                  padding: "3px 9px", borderRadius: "20px",
+                  color: pct >= 0 ? "#34d399" : "#f87171",
+                  background: pct >= 0 ? "rgba(52,211,153,0.12)" : "rgba(248,113,113,0.12)",
+                  border: `1px solid ${pct >= 0 ? "rgba(52,211,153,0.25)" : "rgba(248,113,113,0.25)"}`,
+                  padding: "3px 8px", borderRadius: "99px",
                 }}>
-                  {pct >= 0 ? <TrendingUp size={11} strokeWidth={2.5} /> : <TrendingDown size={11} strokeWidth={2.5} />}
+                  {pct >= 0 ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
                   {Math.abs(pct).toFixed(1)}%
                 </span>
               )}
               <button
                 onClick={e => { e.preventDefault(); load() }}
-                style={{ background: "none", border: "none", cursor: "pointer", padding: "2px", color: "#d1d5db", display: "flex", borderRadius: "4px", transition: "color 0.12s" }}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#334155", padding: "2px", display: "flex" }}
               >
                 <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
               </button>
             </div>
           </div>
 
-          {/* Metric value */}
           {loading ? (
-            <div style={{ height: "52px", display: "flex", flexDirection: "column", gap: "8px" }}>
-              <div style={{ height: "36px", width: "140px", background: "#f3f4f6", borderRadius: "6px" }} />
-              <div style={{ height: "14px", width: "80px", background: "#f9fafb", borderRadius: "4px" }} />
+            <div style={{ height: "48px" }}>
+              <div style={{ height: "36px", width: "130px", background: "#141d2e", borderRadius: "6px" }} />
+              <div style={{ height: "12px", width: "80px", background: "#0d1117", borderRadius: "4px", marginTop: "8px" }} />
             </div>
           ) : error ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 12px", background: "#fef2f2", borderRadius: "8px" }}>
-              <AlertCircle size={14} color="#dc2626" />
-              <span style={{ fontSize: "12px", color: "#b91c1c" }}>Query failed — check the SQL</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 12px", background: "rgba(248,113,113,0.08)", borderRadius: "8px", border: "1px solid rgba(248,113,113,0.2)" }}>
+              <AlertCircle size={14} color="#f87171" />
+              <span style={{ fontSize: "12px", color: "#f87171" }}>Query failed</span>
             </div>
           ) : (
             <>
-              <div style={{
-                fontSize: "48px", fontWeight: 800, color: "#0f172a",
-                letterSpacing: "-2px", lineHeight: 1,
-                fontVariantNumeric: "tabular-nums",
-              }}>
+              <div style={{ fontSize: "46px", fontWeight: 800, color: "#f8fafc", letterSpacing: "-2px", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>
                 {fmt(headline)}
               </div>
-              <div style={{ fontSize: "13px", color: "#9ca3af", marginTop: "6px", fontWeight: 400 }}>
+              <div style={{ fontSize: "12px", color: "#475569", marginTop: "5px" }}>
                 {(numCol ?? "").replace(/_/g, " ")}
               </div>
             </>
@@ -163,24 +150,24 @@ export function KpiTile({ kpi, workspaceSlug }: Props) {
         {/* Chart */}
         {!loading && !error && data && data.length > 1 && kpi.chart_type !== "number" && (
           <>
-            <div style={{ height: "1px", background: "#f3f4f6" }} />
-            <div style={{ height: "96px" }}>
+            <div style={{ height: "1px", background: "rgba(255,255,255,0.05)" }} />
+            <div style={{ height: "88px" }}>
               <ResponsiveContainer width="100%" height="100%">
                 {kpi.chart_type === "bar" ? (
-                  <BarChart data={data} margin={{ top: 8, right: 2, left: 2, bottom: 0 }} barCategoryGap="40%">
-                    <Bar dataKey="v" fill={color} radius={[3, 3, 0, 0]} opacity={0.9} />
-                    <Tooltip content={<ChartTooltip />} cursor={false} />
+                  <BarChart data={data} margin={{ top: 8, right: 4, left: 4, bottom: 0 }} barCategoryGap="40%">
+                    <Bar dataKey="v" fill={color} radius={[3, 3, 0, 0]} opacity={0.8} />
+                    <Tooltip content={<Tip />} cursor={false} />
                   </BarChart>
                 ) : (
-                  <AreaChart data={data} margin={{ top: 8, right: 2, left: 2, bottom: 0 }}>
+                  <AreaChart data={data} margin={{ top: 8, right: 4, left: 4, bottom: 0 }}>
                     <defs>
                       <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%"   stopColor={color} stopOpacity={0.18} />
-                        <stop offset="95%"  stopColor={color} stopOpacity={0.01} />
+                        <stop offset="5%"  stopColor={color} stopOpacity={0.2} />
+                        <stop offset="95%" stopColor={color} stopOpacity={0.02} />
                       </linearGradient>
                     </defs>
-                    <Area type="monotone" dataKey="v" stroke={color} strokeWidth={2} fill={`url(#${gradId})`} dot={false} activeDot={{ r: 3, fill: color }} />
-                    <Tooltip content={<ChartTooltip />} cursor={{ stroke: "#e5e7eb", strokeWidth: 1, strokeDasharray: "4 2" }} />
+                    <Area type="monotone" dataKey="v" stroke={color} strokeWidth={2} fill={`url(#${gradId})`} dot={false} />
+                    <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.08)", strokeWidth: 1 }} />
                   </AreaChart>
                 )}
               </ResponsiveContainer>
@@ -190,15 +177,15 @@ export function KpiTile({ kpi, workspaceSlug }: Props) {
 
         {/* Footer */}
         <div style={{
-          borderTop: "1px solid #f3f4f6",
-          padding: "11px 22px",
+          padding: "10px 20px",
+          borderTop: "1px solid rgba(255,255,255,0.05)",
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          background: "#fafafa",
+          background: "#080c14",
         }}>
-          <span style={{ fontSize: "12px", color: "#d1d5db" }}>
+          <span style={{ fontSize: "12px", color: "#334155" }}>
             {!loading && !error && rows && rows.length > 1 ? `${rows.length} data points` : ""}
           </span>
-          <span style={{ fontSize: "12px", fontWeight: 600, color: color }}>
+          <span style={{ fontSize: "12px", fontWeight: 600, color }}>
             View details →
           </span>
         </div>

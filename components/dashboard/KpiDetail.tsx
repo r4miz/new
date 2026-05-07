@@ -24,10 +24,10 @@ interface Props {
 type QueryRow = Record<string, unknown>
 
 const ACCENT = {
-  line:   { stroke: "#3b82f6", fill: "#3b82f6", light: "#eff6ff" },
-  area:   { stroke: "#8b5cf6", fill: "#8b5cf6", light: "#f5f3ff" },
-  bar:    { stroke: "#f59e0b", fill: "#f59e0b", light: "#fffbeb" },
-  number: { stroke: "#10b981", fill: "#10b981", light: "#f0fdf4" },
+  line:   { stroke: "#0ea5e9", fill: "#0ea5e9" },
+  area:   { stroke: "#8b5cf6", fill: "#8b5cf6" },
+  bar:    { stroke: "#f59e0b", fill: "#f59e0b" },
+  number: { stroke: "#10b981", fill: "#10b981" },
 } as const
 
 function fmt(v: unknown): string {
@@ -65,6 +65,12 @@ function trendPct(rows: QueryRow[], col: string): number | null {
   return ((curr - prev) / Math.abs(prev)) * 100
 }
 
+const TOOLTIP_STYLE: React.CSSProperties = {
+  fontSize: 12, borderRadius: 8,
+  background: "#141d2e", border: "1px solid rgba(255,255,255,0.1)",
+  color: "#f8fafc", boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+}
+
 export function KpiDetail({ kpi }: Props) {
   const [rows, setRows] = useState<QueryRow[] | null>(null)
   const [loading, setLoading] = useState(true)
@@ -96,8 +102,7 @@ export function KpiDetail({ kpi }: Props) {
   const isScalar = !rows || rows.length <= 1 || kpi.chart_type === "number"
   const trend    = rows && !isScalar ? trendPct(rows, numCol) : null
 
-  // Summary stats
-  const nums = rows?.map((r) => Number(r[numCol] ?? 0)).filter((n) => !isNaN(n)) ?? []
+  const nums  = rows?.map((r) => Number(r[numCol] ?? 0)).filter((n) => !isNaN(n)) ?? []
   const total = nums.reduce((a, b) => a + b, 0)
   const avg   = nums.length ? total / nums.length : 0
   const max   = nums.length ? Math.max(...nums) : 0
@@ -114,47 +119,59 @@ export function KpiDetail({ kpi }: Props) {
     : kpi.chart_type === "bar" ? <BarChart2 size={18} />
     : <TrendingUp size={18} />
 
+  const card: React.CSSProperties = {
+    background: "#0d1117", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "14px",
+  }
+
   return (
-    <div className="space-y-5">
+    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center`}
-            style={{ background: accent.light, color: accent.stroke }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div style={{
+            width: "44px", height: "44px", borderRadius: "12px", flexShrink: 0,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: `rgba(${accent.fill === "#0ea5e9" ? "14,165,233" : accent.fill === "#8b5cf6" ? "139,92,246" : accent.fill === "#f59e0b" ? "245,158,11" : "16,185,129"},0.12)`,
+            color: accent.stroke,
+          }}>
             {chartIcon}
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">{kpi.name}</h1>
-            <p className="text-sm text-slate-500 mt-0.5">{kpi.description}</p>
+            <h1 style={{ margin: 0, fontSize: "20px", fontWeight: 800, color: "#f8fafc", letterSpacing: "-0.3px" }}>{kpi.name}</h1>
+            <p style={{ margin: "4px 0 0", fontSize: "13px", color: "#475569" }}>{kpi.description}</p>
           </div>
         </div>
         {trend !== null && (
-          <div className={`flex items-center gap-1 text-sm font-semibold px-3 py-1.5 rounded-xl flex-shrink-0 ${
-            trend >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
-          }`}>
-            {trend >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
+          <div style={{
+            display: "flex", alignItems: "center", gap: "6px", flexShrink: 0,
+            fontSize: "13px", fontWeight: 700, padding: "8px 14px", borderRadius: "10px",
+            background: trend >= 0 ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)",
+            color: trend >= 0 ? "#10b981" : "#ef4444",
+            border: `1px solid ${trend >= 0 ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}`,
+          }}>
+            {trend >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
             {Math.abs(trend).toFixed(1)}% vs prev
           </div>
         )}
       </div>
 
-      {/* Loading skeleton */}
+      {/* Loading */}
       {loading && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-4 gap-3">
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-20 bg-slate-100 rounded-xl animate-pulse" />
+              <div key={i} style={{ height: "80px", background: "#141d2e", borderRadius: "12px", animation: "pulse 1.5s infinite" }} />
             ))}
           </div>
-          <div className="h-64 bg-slate-100 rounded-2xl animate-pulse" />
+          <div style={{ height: "260px", background: "#141d2e", borderRadius: "14px", animation: "pulse 1.5s infinite" }} />
         </div>
       )}
 
       {/* Error */}
       {!loading && error && (
-        <div className="flex items-start gap-2 text-red-600 text-sm bg-red-50 rounded-xl p-4">
-          <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
-          <span className="font-mono">{error}</span>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", fontSize: "13px", color: "#fca5a5", background: "rgba(248,113,113,0.08)", border: "1px solid rgba(248,113,113,0.2)", borderRadius: "12px", padding: "16px" }}>
+          <AlertCircle size={15} style={{ flexShrink: 0, marginTop: "1px" }} />
+          <span style={{ fontFamily: "monospace" }}>{error}</span>
         </div>
       )}
 
@@ -163,73 +180,66 @@ export function KpiDetail({ kpi }: Props) {
         <>
           {/* Stat pills */}
           {nums.length > 1 && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
               {[
                 { label: "Total", value: fmt(total) },
                 { label: "Average", value: fmt(avg) },
                 { label: "Peak", value: fmt(max) },
                 { label: "Floor", value: fmt(min) },
               ].map((s) => (
-                <div key={s.label} className="bg-white border border-slate-200 rounded-xl p-4">
-                  <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">{s.label}</p>
-                  <p className="text-lg font-bold text-slate-900 tabular-nums">{s.value}</p>
+                <div key={s.label} style={{ ...card, padding: "16px 18px" }}>
+                  <p style={{ margin: "0 0 6px", fontSize: "11px", color: "#334155", textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>{s.label}</p>
+                  <p style={{ margin: 0, fontSize: "18px", fontWeight: 800, color: "#f8fafc", fontVariantNumeric: "tabular-nums" }}>{s.value}</p>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Scalar number */}
+          {/* Scalar */}
           {isScalar && rows.length === 1 && (
-            <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center">
-              <p className="text-xs text-slate-400 uppercase tracking-wider mb-3">{numCol.replace(/_/g, " ")}</p>
-              <p className="text-5xl font-bold tabular-nums" style={{ color: accent.stroke }}>
+            <div style={{ ...card, padding: "40px", textAlign: "center" }}>
+              <p style={{ margin: "0 0 12px", fontSize: "11px", color: "#334155", textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600 }}>
+                {numCol.replace(/_/g, " ")}
+              </p>
+              <p style={{ margin: 0, fontSize: "56px", fontWeight: 800, fontVariantNumeric: "tabular-nums", color: accent.stroke }}>
                 {fmt(rows[0][numCol])}
               </p>
             </div>
           )}
 
-          {/* Full chart */}
+          {/* Chart */}
           {!isScalar && rows.length > 1 && (
-            <div className="bg-white border border-slate-200 rounded-2xl p-5">
-              <div className="h-64">
+            <div style={{ ...card, padding: "20px" }}>
+              <div style={{ height: "260px" }}>
                 <ResponsiveContainer width="100%" height="100%">
                   {kpi.chart_type === "bar" ? (
                     <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="35%">
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
-                      <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} width={60} />
-                      <Tooltip
-                        contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid #f1f5f9", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-                        formatter={(v: unknown) => [fmt(v), numCol.replace(/_/g, " ")]}
-                      />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#334155" }} tickLine={false} axisLine={false} />
+                      <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 11, fill: "#334155" }} tickLine={false} axisLine={false} width={60} />
+                      <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: unknown) => [fmt(v), numCol.replace(/_/g, " ")]} />
                       <Bar dataKey="value" fill={accent.fill} radius={[4, 4, 0, 0]} />
                     </BarChart>
                   ) : kpi.chart_type === "area" ? (
                     <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%"   stopColor={accent.fill} stopOpacity={0.3} />
+                          <stop offset="0%"   stopColor={accent.fill} stopOpacity={0.25} />
                           <stop offset="100%" stopColor={accent.fill} stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
-                      <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} width={60} />
-                      <Tooltip
-                        contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid #f1f5f9", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-                        formatter={(v: unknown) => [fmt(v), numCol.replace(/_/g, " ")]}
-                      />
-                      <Area type="monotone" dataKey="value" stroke={accent.stroke} strokeWidth={2.5} fill={`url(#${gradId})`} dot={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#334155" }} tickLine={false} axisLine={false} />
+                      <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 11, fill: "#334155" }} tickLine={false} axisLine={false} width={60} />
+                      <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: unknown) => [fmt(v), numCol.replace(/_/g, " ")]} />
+                      <Area type="monotone" dataKey="value" stroke={accent.stroke} strokeWidth={2} fill={`url(#${gradId})`} dot={false} />
                     </AreaChart>
                   ) : (
                     <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} />
-                      <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 11, fill: "#94a3b8" }} tickLine={false} axisLine={false} width={60} />
-                      <Tooltip
-                        contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid #f1f5f9", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-                        formatter={(v: unknown) => [fmt(v), numCol.replace(/_/g, " ")]}
-                      />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 11, fill: "#334155" }} tickLine={false} axisLine={false} />
+                      <YAxis tickFormatter={(v) => fmt(v)} tick={{ fontSize: 11, fill: "#334155" }} tickLine={false} axisLine={false} width={60} />
+                      <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: unknown) => [fmt(v), numCol.replace(/_/g, " ")]} />
                       <Line type="monotone" dataKey="value" stroke={accent.stroke} strokeWidth={2.5} dot={{ r: 3, fill: accent.stroke }} />
                     </LineChart>
                   )}
@@ -240,28 +250,28 @@ export function KpiDetail({ kpi }: Props) {
 
           {/* Data table */}
           {rows.length > 0 && (
-            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-              <div className="px-5 py-3.5 border-b border-slate-100">
-                <p className="text-sm font-semibold text-slate-700">
-                  Raw data <span className="font-normal text-slate-400">· {rows.length} rows</span>
+            <div style={{ ...card, overflow: "hidden" }}>
+              <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                <p style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: "#94a3b8" }}>
+                  Raw data <span style={{ fontWeight: 400, color: "#334155" }}>· {rows.length} rows</span>
                 </p>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", fontSize: "13px", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr className="bg-slate-50">
+                    <tr style={{ background: "#080c14" }}>
                       {cols.map((c) => (
-                        <th key={c} className="text-left px-5 py-2.5 text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                        <th key={c} style={{ textAlign: "left", padding: "10px 20px", fontSize: "11px", fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
                           {c.replace(/_/g, " ")}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody>
                     {rows.slice(0, 100).map((row, i) => (
-                      <tr key={i} className="hover:bg-slate-50 transition-colors">
+                      <tr key={i} style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
                         {cols.map((c) => (
-                          <td key={c} className="px-5 py-2.5 text-slate-700 whitespace-nowrap tabular-nums">
+                          <td key={c} style={{ padding: "10px 20px", color: "#94a3b8", whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
                             {typeof row[c] === "number" ? fmtFull(row[c]) : String(row[c] ?? "—")}
                           </td>
                         ))}
@@ -271,7 +281,7 @@ export function KpiDetail({ kpi }: Props) {
                 </table>
               </div>
               {rows.length > 100 && (
-                <div className="px-5 py-3 border-t border-slate-100 text-xs text-slate-400">
+                <div style={{ padding: "12px 20px", borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: "12px", color: "#334155" }}>
                   Showing first 100 of {rows.length} rows
                 </div>
               )}
@@ -281,17 +291,21 @@ export function KpiDetail({ kpi }: Props) {
       )}
 
       {/* SQL accordion */}
-      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+      <div style={{ ...card, overflow: "hidden" }}>
         <button
           onClick={() => setSqlOpen((o) => !o)}
-          className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+          style={{
+            width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "14px 20px", fontSize: "13px", fontWeight: 600, color: "#475569",
+            background: "none", border: "none", cursor: "pointer", transition: "color 0.12s",
+          }}
         >
           <span>SQL query</span>
-          {sqlOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {sqlOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
         </button>
         {sqlOpen && (
-          <div className="border-t border-slate-100">
-            <pre className="bg-slate-950 text-slate-300 text-xs p-5 overflow-x-auto leading-relaxed font-mono whitespace-pre-wrap">
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <pre style={{ margin: 0, background: "#07090e", color: "#7dd3fc", fontSize: "12px", padding: "20px", overflowX: "auto", lineHeight: 1.65, fontFamily: "monospace", whiteSpace: "pre-wrap" }}>
               {kpi.proposed_sql}
             </pre>
           </div>

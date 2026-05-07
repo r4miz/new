@@ -22,19 +22,13 @@ export default async function ChatPage({
     .from("datasets").select("*").eq("workspace_id", workspace.id).order("created_at", { ascending: false })
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#f1f5f9" }}>
-      {/* Header */}
-      <div style={{ background: "white", borderBottom: "1px solid #e5e7eb", padding: "20px 36px", flexShrink: 0 }}>
-        <h1 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#0f172a" }}>
-          AI Advisor
-        </h1>
-        <p style={{ margin: "3px 0 0", fontSize: "13px", color: "#9ca3af" }}>
-          {workspace.industry
-            ? `Expert in ${workspace.industry} · powered by your data`
-            : "Business advisor · powered by your data"}
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#07090e" }}>
+      <div style={{ background: "#0d1117", borderBottom: "1px solid rgba(255,255,255,0.07)", padding: "20px 32px", flexShrink: 0 }}>
+        <h1 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#f8fafc" }}>AI Advisor</h1>
+        <p style={{ margin: "3px 0 0", fontSize: "13px", color: "#475569" }}>
+          {workspace.industry ? `Expert in ${workspace.industry} · powered by your data` : "Business advisor · powered by your data"}
         </p>
       </div>
-
       <div style={{ flex: 1, overflow: "hidden" }}>
         <ChatInterface workspace={workspace} datasets={(datasets ?? []) as Dataset[]} />
       </div>

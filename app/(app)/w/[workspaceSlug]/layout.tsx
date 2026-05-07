@@ -32,18 +32,14 @@ export default async function WorkspaceLayout({
                      status === "past_due"
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
-      <Sidebar
-        workspace={workspace}
-        daysLeft={daysLeft}
-        subscriptionStatus={status}
-      />
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#07090e" }}>
+      <Sidebar workspace={workspace} daysLeft={daysLeft} subscriptionStatus={status} />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
         {isTrialing && (
           <TrialBanner daysLeft={daysLeft} workspaceSlug={workspaceSlug} />
         )}
-        <main className="flex-1 overflow-auto flex flex-col">
+        <main style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
           {isExpired ? (
             <UpgradeGate workspace={{ id: workspace.id, name: workspace.name }}>
               {children}

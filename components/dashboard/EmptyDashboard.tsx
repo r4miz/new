@@ -3,35 +3,53 @@ import { Upload, Plug, ArrowRight } from "lucide-react"
 
 export function EmptyDashboard({ workspaceSlug }: { workspaceSlug: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-center px-4">
-      <div className="relative mb-8">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
-          <Upload size={26} className="text-white" />
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 24px", textAlign: "center" }}>
+      <div style={{ position: "relative", marginBottom: "28px" }}>
+        <div style={{
+          width: "64px", height: "64px", borderRadius: "16px",
+          background: "linear-gradient(135deg, #0ea5e9, #6366f1)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 8px 32px rgba(14,165,233,0.3)",
+        }}>
+          <Upload size={26} color="white" />
         </div>
-        <div className="absolute -bottom-2 -right-3 w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center shadow-md">
-          <Plug size={14} className="text-white" />
+        <div style={{
+          position: "absolute", bottom: "-6px", right: "-8px",
+          width: "28px", height: "28px", borderRadius: "8px",
+          background: "#10b981", display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 4px 12px rgba(16,185,129,0.4)",
+        }}>
+          <Plug size={13} color="white" />
         </div>
       </div>
-      <h2 className="text-xl font-bold text-slate-900 mb-2">No KPIs yet</h2>
-      <p className="text-slate-500 text-sm leading-relaxed max-w-sm mb-8">
-        Upload a CSV or connect an integration. Our AI will analyze your data
-        and build a full KPI dashboard in under a minute.
+
+      <h2 style={{ margin: "0 0 10px", fontSize: "20px", fontWeight: 800, color: "#f8fafc", letterSpacing: "-0.4px" }}>
+        No KPIs yet
+      </h2>
+      <p style={{ margin: "0 0 32px", fontSize: "14px", color: "#475569", lineHeight: 1.65, maxWidth: "380px" }}>
+        Upload a CSV or connect an integration. AI will analyze your data and build a full KPI dashboard in under a minute.
       </p>
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Link
-          href={`/w/${workspaceSlug}/data/upload`}
-          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors shadow-sm shadow-blue-200"
-        >
+
+      <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", justifyContent: "center" }}>
+        <Link href={`/w/${workspaceSlug}/data/upload`} style={{
+          display: "inline-flex", alignItems: "center", gap: "8px",
+          background: "#0ea5e9", color: "white",
+          fontSize: "14px", fontWeight: 700,
+          padding: "11px 22px", borderRadius: "9px", textDecoration: "none",
+          boxShadow: "0 4px 16px rgba(14,165,233,0.25)",
+        }}>
           <Upload size={15} />
-          Upload a CSV
+          Upload CSV
           <ArrowRight size={14} />
         </Link>
-        <Link
-          href={`/w/${workspaceSlug}/integrations`}
-          className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
-        >
+        <Link href={`/w/${workspaceSlug}/integrations`} style={{
+          display: "inline-flex", alignItems: "center", gap: "8px",
+          background: "#141d2e", border: "1px solid rgba(255,255,255,0.1)",
+          color: "#94a3b8", fontSize: "14px", fontWeight: 600,
+          padding: "11px 22px", borderRadius: "9px", textDecoration: "none",
+        }}>
           <Plug size={15} />
-          Connect an integration
+          Connect integration
         </Link>
       </div>
     </div>
