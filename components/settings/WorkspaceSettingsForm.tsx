@@ -10,13 +10,13 @@ const SIZES      = ["1–10","11–50","51–200","201–500","500+"]
 
 const INPUT: React.CSSProperties = {
   width: "100%", boxSizing: "border-box", padding: "11px 14px",
-  background: "#141d2e", border: "1px solid rgba(255,255,255,0.1)",
-  borderRadius: "8px", fontSize: "14px", color: "#f8fafc", outline: "none",
-  transition: "border-color 0.15s",
+  background: "#0f1e38", border: "1px solid rgba(255,255,255,0.10)",
+  borderRadius: "8px", fontSize: "14px", color: "#e2e8f0", outline: "none",
+  transition: "border-color 0.15s, box-shadow 0.15s",
 }
 const LABEL: React.CSSProperties = {
-  display: "block", fontSize: "12px", fontWeight: 600,
-  color: "#475569", marginBottom: "7px", textTransform: "uppercase", letterSpacing: "0.05em",
+  display: "block", fontSize: "11px", fontWeight: 700,
+  color: "#64748b", marginBottom: "7px", textTransform: "uppercase", letterSpacing: "0.06em",
 }
 
 export function WorkspaceSettingsForm({ workspace }: { workspace: Workspace }) {
@@ -31,10 +31,10 @@ export function WorkspaceSettingsForm({ workspace }: { workspace: Workspace }) {
 
   const focus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
     e.target.style.borderColor = "#0ea5e9"
-    e.target.style.boxShadow   = "0 0 0 3px rgba(14,165,233,0.1)"
+    e.target.style.boxShadow   = "0 0 0 3px rgba(14,165,233,0.12)"
   }
   const blur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-    e.target.style.borderColor = "rgba(255,255,255,0.1)"
+    e.target.style.borderColor = "rgba(255,255,255,0.10)"
     e.target.style.boxShadow   = "none"
   }
 
