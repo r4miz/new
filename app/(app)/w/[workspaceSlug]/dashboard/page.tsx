@@ -7,6 +7,7 @@ import { KpiTile } from "@/components/dashboard/KpiTile"
 import { EmptyDashboard } from "@/components/dashboard/EmptyDashboard"
 import Link from "next/link"
 import { Plus, BarChart2, Database, Plug } from "lucide-react"
+import { T } from "@/lib/theme"
 
 export default async function DashboardPage({
   params,
@@ -28,76 +29,79 @@ export default async function DashboardPage({
   ])
 
   const stats = [
-    { label: "KPIs tracked",      value: kpis.length,   Icon: BarChart2, color: "#0ea5e9" },
-    { label: "Datasets",          value: dsCount ?? 0,  Icon: Database,  color: "#8b5cf6" },
-    { label: "Live integrations", value: intCount ?? 0, Icon: Plug,      color: "#10b981" },
+    { label: "KPIs",        value: kpis.length,   Icon: BarChart2, color: T.accent },
+    { label: "Datasets",    value: dsCount ?? 0,  Icon: Database,  color: T.purple },
+    { label: "Integrations",value: intCount ?? 0, Icon: Plug,      color: T.green  },
   ]
 
   return (
-    <div style={{ minHeight: "100%", background: "#07090e", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100%", background: T.bg, display: "flex", flexDirection: "column" }}>
 
       {/* Header */}
       <div style={{
-        background: "#0d1117",
-        borderBottom: "1px solid rgba(255,255,255,0.07)",
-        padding: "28px 36px", flexShrink: 0,
+        background: T.surface, borderBottom: `1px solid ${T.border}`,
+        padding: "20px 28px", flexShrink: 0,
       }}>
-        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "24px" }}>
+
+          {/* Title + stats */}
+          <div style={{ display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap" }}>
             <div>
-              <h1 style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: "#f8fafc", letterSpacing: "-0.5px" }}>
+              <h1 style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: T.text, letterSpacing: "-0.3px" }}>
                 Dashboard
               </h1>
-              <p style={{ margin: "4px 0 0", fontSize: "13.5px", color: "#475569" }}>
-                {workspace.industry ? `${workspace.industry} · ${workspace.name}` : workspace.name}
-              </p>
+              {workspace.industry && (
+                <p style={{ margin: "2px 0 0", fontSize: "12px", color: T.textMuted }}>
+                  {workspace.industry}
+                </p>
+              )}
             </div>
-            <Link href={`/w/${workspaceSlug}/data/upload`} style={{
-              display: "inline-flex", alignItems: "center", gap: "7px",
-              background: "#0ea5e9", color: "white",
-              fontSize: "13.5px", fontWeight: 700,
-              padding: "10px 20px", borderRadius: "8px", textDecoration: "none",
-              boxShadow: "0 4px 16px rgba(14,165,233,0.25)",
-            }}>
-              <Plus size={15} strokeWidth={2.5} />
-              Add data
-            </Link>
+
+            {/* Inline stat pills */}
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              {stats.map(({ label, value, Icon, color }) => (
+                <div key={label} style={{
+                  display: "flex", alignItems: "center", gap: "7px",
+                  background: T.surface2, border: `1px solid ${T.border}`,
+                  borderRadius: "8px", padding: "7px 12px",
+                }}>
+                  <Icon size={13} color={color} />
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: T.text, fontVariantNumeric: "tabular-nums" }}>
+                    {value}
+                  </span>
+                  <span style={{ fontSize: "12px", color: T.textMuted }}>{label}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Stats */}
-          <div style={{ display: "flex", gap: "12px" }}>
-            {stats.map(({ label, value, Icon, color }) => (
-              <div key={label} style={{
-                display: "flex", alignItems: "center", gap: "14px",
-                background: "#141d2e", border: "1px solid rgba(255,255,255,0.07)",
-                borderRadius: "10px", padding: "14px 20px", minWidth: "160px",
-              }}>
-                <div style={{
-                  width: "36px", height: "36px", borderRadius: "8px",
-                  background: color + "18", flexShrink: 0,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                  <Icon size={17} color={color} />
-                </div>
-                <div>
-                  <div style={{ fontSize: "26px", fontWeight: 800, color: "#f8fafc", lineHeight: 1, letterSpacing: "-0.8px" }}>
-                    {value}
-                  </div>
-                  <div style={{ fontSize: "12px", color: "#475569", marginTop: "3px" }}>{label}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+          {/* CTA */}
+          <Link href={`/w/${workspaceSlug}/data/upload`} style={{
+            display: "inline-flex", alignItems: "center", gap: "6px",
+            background: T.accent, color: "white",
+            fontSize: "13px", fontWeight: 700,
+            padding: "9px 18px", borderRadius: "8px", textDecoration: "none",
+            boxShadow: `0 4px 16px ${T.accentGlow}`,
+            flexShrink: 0,
+            transition: "opacity 0.15s",
+          }}>
+            <Plus size={14} strokeWidth={2.5} />
+            Add data
+          </Link>
         </div>
       </div>
 
-      {/* Grid */}
-      <div style={{ flex: 1, padding: "32px 36px" }}>
-        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+      {/* KPI grid */}
+      <div style={{ flex: 1, padding: "24px 28px" }}>
+        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           {kpis.length === 0 ? (
             <EmptyDashboard workspaceSlug={workspaceSlug} />
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "16px" }}>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: "14px",
+            }}>
               {kpis.map((kpi) => (
                 <KpiTile key={kpi.id} kpi={kpi} workspaceSlug={workspaceSlug} />
               ))}

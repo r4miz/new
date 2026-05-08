@@ -31,19 +31,19 @@ export default async function KpiDetailPage({
   if (!kpi) redirect(`/w/${workspaceSlug}/dashboard`)
 
   return (
-    <div style={{ minHeight: "100%", background: "#07090e" }}>
-      <div style={{ background: "#0d1117", borderBottom: "1px solid rgba(255,255,255,0.07)", padding: "20px 36px" }}>
+    <div style={{ minHeight: "100%", background: "#060d1a" }}>
+      <div style={{ background: "#0b1629", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "20px 28px" }}>
         <div style={{ maxWidth: "900px", margin: "0 auto" }}>
           <Link
             href={`/w/${workspaceSlug}/dashboard`}
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "#475569", textDecoration: "none", transition: "color 0.12s" }}
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "#64748b", textDecoration: "none", transition: "color 0.12s" }}
           >
             <ArrowLeft size={14} />
             Back to dashboard
           </Link>
         </div>
       </div>
-      <div style={{ padding: "32px 36px" }}>
+      <div style={{ padding: "24px 28px" }}>
         <div style={{ maxWidth: "900px", margin: "0 auto" }}>
           <KpiDetail kpi={kpi as KpiProposal} />
         </div>
