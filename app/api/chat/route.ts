@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server"
 import Anthropic from "@anthropic-ai/sdk"
+import { anthropic } from "@/lib/ai/client"
 import { createClient } from "@/lib/supabase/server"
 import { adminClient } from "@/lib/supabase/admin"
 import { buildChatSystemPrompt } from "@/lib/ai/prompts/chat"
 import { validateKpiSql } from "@/lib/sql/validator"
 import type { ColumnMetadata } from "@/lib/types"
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-
+// Tool definition is fully static — mark for KV-cache
 const QUERY_TOOL: Anthropic.Tool = {
   name: "query_data",
   description:
@@ -27,6 +27,7 @@ const QUERY_TOOL: Anthropic.Tool = {
     },
     required: ["sql", "reason"],
   },
+  cache_control: { type: "ephemeral" },
 }
 
 async function runQuery(sql: string): Promise<{ rows: unknown[]; error?: string }> {
@@ -84,10 +85,14 @@ export async function POST(request: Request) {
     })),
   })
 
+  // Stable system prompt as cacheable block — hits KV-cache across turns & conversations
+  const systemBlock: Anthropic.TextBlockParam[] = [
+    { type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } },
+  ]
+
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>()
   const writer = writable.getWriter()
 
-  // Run the agentic loop asynchronously
   ;(async () => {
     const send = (type: string, data: Record<string, unknown> = {}) =>
       writer.write(sseChunk(type, data))
@@ -96,52 +101,69 @@ export async function POST(request: Request) {
       let history = [...messages]
 
       for (let i = 0; i < 5; i++) {
-        const response = await anthropic.messages.create({
-          model: "claude-sonnet-4-6",
-          max_tokens: 2048,
-          system: systemPrompt,
-          tools: [QUERY_TOOL],
-          messages: history,
-        })
+        const isLastIteration = i === 4
 
-        if (response.stop_reason === "tool_use") {
-          history.push({ role: "assistant", content: response.content })
-          const results: Anthropic.ToolResultBlockParam[] = []
+        // Non-streaming for tool-use iterations; stream the final text response
+        if (isLastIteration || history[history.length - 1]?.role === "user") {
+          // Try streaming first — if tool_use comes back we'll handle it in next loop
+          const stream = anthropic.messages.stream({
+            model: "claude-sonnet-4-6",
+            max_tokens: 2048,
+            system: systemBlock,
+            tools: [QUERY_TOOL],
+            messages: history,
+          })
 
-          for (const block of response.content) {
-            if (block.type !== "tool_use") continue
-            const input = block.input as { sql: string; reason: string }
+          let fullText = ""
+          let stopReason: string | null = null
+          let fullContent: Anthropic.ContentBlock[] = []
 
-            await send("status", { message: `Querying: ${input.reason}` })
-
-            const { rows, error } = await runQuery(input.sql)
-            results.push({
-              type: "tool_result",
-              tool_use_id: block.id,
-              content: error
-                ? `Error: ${error}`
-                : rows.length === 0
-                ? "Query returned no rows."
-                : JSON.stringify(rows.slice(0, 100)),
-            })
+          for await (const event of stream) {
+            if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+              const chunk = event.delta.text
+              fullText += chunk
+              await send("text", { chunk })
+            }
+            if (event.type === "message_delta") {
+              stopReason = event.delta.stop_reason ?? null
+            }
           }
 
-          history.push({ role: "user", content: results })
-          await send("status", { message: "Analyzing results…" })
-          continue
-        }
+          const finalMsg = await stream.finalMessage()
+          fullContent = finalMsg.content
+          stopReason = finalMsg.stop_reason
 
-        // Final answer — stream word-by-word for typing effect
-        await send("status", { message: null })
-        const textBlock = response.content.find((b) => b.type === "text")
-        const text = textBlock?.type === "text" ? textBlock.text : ""
+          if (stopReason === "tool_use") {
+            // Streamed partial text before tool call — discard streamed chunks,
+            // they'll be regenerated after tool results are appended
+            history.push({ role: "assistant", content: fullContent })
+            const results: Anthropic.ToolResultBlockParam[] = []
 
-        const tokens = text.split(/(\s+)/)
-        for (const token of tokens) {
-          await send("text", { chunk: token })
-          if (token.trim().length > 0) await new Promise((r) => setTimeout(r, 7))
+            for (const block of fullContent) {
+              if (block.type !== "tool_use") continue
+              const input = block.input as { sql: string; reason: string }
+              await send("status", { message: `Querying: ${input.reason}` })
+              const { rows, error } = await runQuery(input.sql)
+              results.push({
+                type: "tool_result",
+                tool_use_id: block.id,
+                content: error
+                  ? `Error: ${error}`
+                  : rows.length === 0
+                  ? "Query returned no rows."
+                  : JSON.stringify(rows.slice(0, 100)),
+              })
+            }
+
+            history.push({ role: "user", content: results })
+            await send("status", { message: "Analyzing results…" })
+            continue
+          }
+
+          // End of stream without tool use = final answer delivered
+          await send("status", { message: null })
+          break
         }
-        break
       }
 
       await send("done", {})

@@ -76,16 +76,19 @@ export function KpiTile({ kpi, workspaceSlug }: Props) {
   return (
     <Link
       href={`/w/${workspaceSlug}/kpis/${kpi.id}`}
-      style={{ display: "block", textDecoration: "none", borderRadius: "12px", overflow: "hidden" }}
+      style={{
+        display: "block", textDecoration: "none", borderRadius: "12px", overflow: "hidden",
+        transition: "transform 0.18s ease, box-shadow 0.18s ease",
+      }}
       onMouseEnter={e => {
         const el = e.currentTarget as HTMLElement
         el.style.transform = "translateY(-2px)"
-        el.style.boxShadow = `0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1)`
+        el.style.boxShadow = `0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)`
       }}
       onMouseLeave={e => {
         const el = e.currentTarget as HTMLElement
-        el.style.transform = "none"
-        el.style.boxShadow = "none"
+        el.style.transform = ""
+        el.style.boxShadow = ""
       }}
     >
       <div style={{
@@ -93,7 +96,6 @@ export function KpiTile({ kpi, workspaceSlug }: Props) {
         border: "1px solid rgba(255,255,255,0.07)",
         borderRadius: "12px", overflow: "hidden",
         borderLeft: `3px solid ${color}`,
-        transition: "transform 0.18s, box-shadow 0.18s",
       }}>
 
         {/* Main */}
@@ -126,9 +128,9 @@ export function KpiTile({ kpi, workspaceSlug }: Props) {
           </div>
 
           {loading ? (
-            <div style={{ height: "48px" }}>
-              <div style={{ height: "36px", width: "130px", background: "#141d2e", borderRadius: "6px" }} />
-              <div style={{ height: "12px", width: "80px", background: "#0d1117", borderRadius: "4px", marginTop: "8px" }} />
+            <div style={{ height: "60px" }}>
+              <div className="shimmer" style={{ height: "38px", width: "140px", borderRadius: "6px", marginBottom: "8px" }} />
+              <div className="shimmer" style={{ height: "12px", width: "90px", borderRadius: "4px" }} />
             </div>
           ) : error ? (
             <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 12px", background: "rgba(248,113,113,0.08)", borderRadius: "8px", border: "1px solid rgba(248,113,113,0.2)" }}>

@@ -160,10 +160,10 @@ export function KpiDetail({ kpi }: Props) {
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
             {[...Array(4)].map((_, i) => (
-              <div key={i} style={{ height: "80px", background: "#141d2e", borderRadius: "12px", animation: "pulse 1.5s infinite" }} />
+              <div key={i} className="shimmer" style={{ height: "80px", borderRadius: "12px" }} />
             ))}
           </div>
-          <div style={{ height: "260px", background: "#141d2e", borderRadius: "14px", animation: "pulse 1.5s infinite" }} />
+          <div className="shimmer" style={{ height: "260px", borderRadius: "14px" }} />
         </div>
       )}
 

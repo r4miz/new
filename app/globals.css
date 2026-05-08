@@ -26,3 +26,34 @@ body {
 /* Auth split panel */
 .auth-left { display: none; }
 @media (min-width: 1024px) { .auth-left { display: flex; } }
+
+/* Global focus ring — keyboard nav visible, mouse nav clean */
+:focus-visible {
+  outline: 2px solid #0ea5e9;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+:focus:not(:focus-visible) { outline: none; }
+
+/* Shimmer skeleton animation */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #141d2e 25%, #1a2540 50%, #141d2e 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* Bounce for typing dots in chat */
+@keyframes bounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40%           { transform: translateY(-6px); }
+}
+
+/* Spin utility used by lucide animate-spin */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.animate-spin { animation: spin 1s linear infinite; }

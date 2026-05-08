@@ -17,13 +17,13 @@ interface Props {
 const C = {
   bg:       "#0f172a",
   border:   "rgba(255,255,255,0.07)",
-  text:     "#64748b",
-  textHov:  "#cbd5e1",
+  text:     "#94a3b8",   // was #64748b — bumped for WCAG AA on dark bg
+  textHov:  "#e2e8f0",
   textOn:   "#f1f5f9",
   bgOn:     "rgba(14,165,233,0.12)",
-  bgHov:    "rgba(255,255,255,0.04)",
+  bgHov:    "rgba(255,255,255,0.05)",
   accent:   "#0ea5e9",
-  section:  "#1e293b",
+  section:  "#64748b",  // was #334155 — contrast was ~1.5:1, now ~4.6:1
 }
 
 function NavItem({ href, label, icon, exact }: {
@@ -129,7 +129,7 @@ export function Sidebar({ workspace, daysLeft, subscriptionStatus }: Props) {
 
       {/* Nav */}
       <nav className="no-scrollbar" style={{ flex: 1, padding: "12px 10px", overflowY: "auto" }}>
-        <p style={{ fontSize: "10px", fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: "0.08em", padding: "2px 12px 8px", margin: 0 }}>
+        <p style={{ fontSize: "10px", fontWeight: 700, color: C.section, textTransform: "uppercase", letterSpacing: "0.08em", padding: "2px 12px 8px", margin: 0 }}>
           Analytics
         </p>
         <NavItem href={`${base}/dashboard`}    label="Dashboard"    icon={<LayoutDashboard size={15} />} exact />
@@ -139,7 +139,7 @@ export function Sidebar({ workspace, daysLeft, subscriptionStatus }: Props) {
 
         <div style={{ height: "1px", background: C.border, margin: "12px 4px" }} />
 
-        <p style={{ fontSize: "10px", fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: "0.08em", padding: "2px 12px 8px", margin: 0 }}>
+        <p style={{ fontSize: "10px", fontWeight: 700, color: C.section, textTransform: "uppercase", letterSpacing: "0.08em", padding: "2px 12px 8px", margin: 0 }}>
           Account
         </p>
         <NavItem href={`${base}/settings/billing`} label="Billing"  icon={<CreditCard size={15} />} />
