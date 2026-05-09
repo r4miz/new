@@ -5,9 +5,20 @@ import { createClient } from "@/lib/supabase/server"
 import { adminClient } from "@/lib/supabase/admin"
 import { buildChatSystemPrompt } from "@/lib/ai/prompts/chat"
 import { validateKpiSql } from "@/lib/sql/validator"
+import { maybeCompact } from "@/lib/ai/compaction"
 import type { ColumnMetadata } from "@/lib/types"
 
-// Tool definition is fully static — mark for KV-cache
+// Route simple questions to Haiku (10× cheaper), complex analysis to Sonnet
+const SIMPLE_PATTERN = /^(what is|what's|how much|who is|when did|show me|list|give me|tell me)/i
+const NEEDS_TOOLS    = /compare|analyz|trend|breakdown|top \d|rank|strateg|forecast|why|how (is|are|should|can)/i
+
+function selectModel(lastUserMessage: string): string {
+  if (NEEDS_TOOLS.test(lastUserMessage))   return "claude-sonnet-4-6"
+  if (SIMPLE_PATTERN.test(lastUserMessage)) return "claude-haiku-4-5-20251001"
+  return "claude-sonnet-4-6" // default to Sonnet for quality
+}
+
+// Tool definition is fully static — marked for KV-cache
 const QUERY_TOOL: Anthropic.Tool = {
   name: "query_data",
   description:
@@ -17,8 +28,7 @@ const QUERY_TOOL: Anthropic.Tool = {
     properties: {
       sql: {
         type: "string",
-        description:
-          "A valid PostgreSQL SELECT query. Must be SELECT only. Double-quote schema and table names.",
+        description: "A valid PostgreSQL SELECT query. Must be SELECT only. Double-quote schema and table names.",
       },
       reason: {
         type: "string",
@@ -74,21 +84,25 @@ export async function POST(request: Request) {
 
   const systemPrompt = buildChatSystemPrompt({
     workspaceName: workspace.name,
-    industry: workspace.industry,
-    currency: workspace.primary_currency,
-    datasets: (datasets ?? []).map((d) => ({
-      name: d.name,
-      schemaName: workspace.schema_name,
-      tableName: d.table_name,
+    industry:      workspace.industry,
+    currency:      workspace.primary_currency,
+    datasets: (datasets ?? []).map(d => ({
+      name:          d.name,
+      schemaName:    workspace.schema_name,
+      tableName:     d.table_name,
       aiDescription: d.ai_description,
-      columns: (d.column_metadata ?? []) as ColumnMetadata[],
+      columns:       (d.column_metadata ?? []) as ColumnMetadata[],
     })),
   })
 
-  // Stable system prompt as cacheable block — hits KV-cache across turns & conversations
+  // Stable system prompt cached by KV-cache across all turns/conversations
   const systemBlock: Anthropic.TextBlockParam[] = [
     { type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } },
   ]
+
+  // Select model based on question complexity, then apply compaction
+  const lastUserText = (messages[messages.length - 1]?.content ?? "") as string
+  const model        = selectModel(typeof lastUserText === "string" ? lastUserText : "")
 
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>()
   const writer = writable.getWriter()
@@ -98,72 +112,55 @@ export async function POST(request: Request) {
       writer.write(sseChunk(type, data))
 
     try {
-      let history = [...messages]
+      // Compact history if it's grown large — slides the window cheaply via Haiku
+      let history = await maybeCompact(messages)
 
       for (let i = 0; i < 5; i++) {
-        const isLastIteration = i === 4
+        const stream = anthropic.messages.stream({
+          model,
+          max_tokens: 2048,
+          system:     systemBlock,
+          tools:      [QUERY_TOOL],
+          messages:   history,
+        })
 
-        // Non-streaming for tool-use iterations; stream the final text response
-        if (isLastIteration || history[history.length - 1]?.role === "user") {
-          // Try streaming first — if tool_use comes back we'll handle it in next loop
-          const stream = anthropic.messages.stream({
-            model: "claude-sonnet-4-6",
-            max_tokens: 2048,
-            system: systemBlock,
-            tools: [QUERY_TOOL],
-            messages: history,
-          })
-
-          let fullText = ""
-          let stopReason: string | null = null
-          let fullContent: Anthropic.ContentBlock[] = []
-
-          for await (const event of stream) {
-            if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-              const chunk = event.delta.text
-              fullText += chunk
-              await send("text", { chunk })
-            }
-            if (event.type === "message_delta") {
-              stopReason = event.delta.stop_reason ?? null
-            }
+        for await (const event of stream) {
+          if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+            await send("text", { chunk: event.delta.text })
           }
-
-          const finalMsg = await stream.finalMessage()
-          fullContent = finalMsg.content
-          stopReason = finalMsg.stop_reason
-
-          if (stopReason === "tool_use") {
-            // Streamed partial text before tool call — discard streamed chunks,
-            // they'll be regenerated after tool results are appended
-            history.push({ role: "assistant", content: fullContent })
-            const results: Anthropic.ToolResultBlockParam[] = []
-
-            for (const block of fullContent) {
-              if (block.type !== "tool_use") continue
-              const input = block.input as { sql: string; reason: string }
-              await send("status", { message: `Querying: ${input.reason}` })
-              const { rows, error } = await runQuery(input.sql)
-              results.push({
-                type: "tool_result",
-                tool_use_id: block.id,
-                content: error
-                  ? `Error: ${error}`
-                  : rows.length === 0
-                  ? "Query returned no rows."
-                  : JSON.stringify(rows.slice(0, 100)),
-              })
-            }
-
-            history.push({ role: "user", content: results })
-            await send("status", { message: "Analyzing results…" })
-            continue
-          }
-
-          // End of stream without tool use = final answer delivered
-          await send("status", { message: null })
-          break
         }
+
+        const finalMsg  = await stream.finalMessage()
+        const stopReason = finalMsg.stop_reason
+
+        if (stopReason === "tool_use") {
+          history.push({ role: "assistant", content: finalMsg.content })
+          const results: Anthropic.ToolResultBlockParam[] = []
+
+          for (const block of finalMsg.content) {
+            if (block.type !== "tool_use") continue
+            const input = block.input as { sql: string; reason: string }
+            await send("status", { message: `Querying: ${input.reason}` })
+            const { rows, error } = await runQuery(input.sql)
+
+            // Compress large results — only send top 50 rows, not 100, to keep token count down
+            const resultContent = error
+              ? `Error: ${error}`
+              : rows.length === 0
+              ? "Query returned no rows."
+              : JSON.stringify(rows.slice(0, 50))
+
+            results.push({ type: "tool_result", tool_use_id: block.id, content: resultContent })
+          }
+
+          history.push({ role: "user", content: results })
+          await send("status", { message: "Analyzing results…" })
+          continue
+        }
+
+        // Final answer streamed — done
+        await send("status", { message: null })
+        break
       }
 
       await send("done", {})
@@ -176,9 +173,9 @@ export async function POST(request: Request) {
 
   return new Response(readable, {
     headers: {
-      "Content-Type": "text/event-stream",
+      "Content-Type":  "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
-      Connection: "keep-alive",
+      Connection:      "keep-alive",
     },
   })
 }

@@ -324,64 +324,78 @@ export default function LandingPage() {
 
       {/* ── Pricing ──────────────────────────────────────────────────────────── */}
       <section id="pricing" style={{ background: "#f8fafc", padding: "100px 48px", borderTop: `1px solid ${BORDER}` }}>
-        <div style={{ maxWidth: "720px", margin: "0 auto", textAlign: "center" }}>
-          <p style={{ fontSize: "12px", fontWeight: 700, color: TEAL, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "12px" }}>
-            Simple pricing
-          </p>
-          <h2 style={{ fontSize: "40px", fontWeight: 900, color: NAVY, margin: "0 0 16px", letterSpacing: "-1px" }}>
-            Start free. Scale when you&apos;re ready.
-          </h2>
-          <p style={{ fontSize: "16px", color: GRAY, margin: "0 0 56px" }}>
-            14-day free trial includes everything. No credit card required.
-          </p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", textAlign: "left" }}>
-            {[
-              {
-                name: "Starter", price: "$15", period: "/mo",
-                features: ["1 workspace", "5 datasets", "AI-generated KPIs", "AI advisor chat", "Email support"],
-                cta: "Start free trial", highlight: false,
-              },
-              {
-                name: "Pro", price: "$35", period: "/mo",
-                features: ["5 workspaces", "Unlimited datasets", "Unlimited KPIs", "AI advisor chat", "Priority support"],
-                cta: "Start free trial", highlight: true,
-              },
-            ].map(plan => (
-              <div key={plan.name} style={{
-                background: plan.highlight ? NAVY : "white",
-                border: `1px solid ${plan.highlight ? "transparent" : BORDER}`,
-                borderRadius: "14px", padding: "32px",
-                boxShadow: plan.highlight ? "0 8px 32px rgba(15,23,42,0.2)" : "0 1px 4px rgba(0,0,0,0.04)",
-              }}>
-                <p style={{ margin: "0 0 6px", fontSize: "14px", fontWeight: 700, color: plan.highlight ? "#7dd3fc" : TEAL }}>{plan.name}</p>
-                <div style={{ display: "flex", alignItems: "baseline", gap: "4px", margin: "0 0 24px" }}>
-                  <span style={{ fontSize: "40px", fontWeight: 900, color: plan.highlight ? "#f8fafc" : NAVY, letterSpacing: "-1px" }}>{plan.price}</span>
-                  <span style={{ fontSize: "14px", color: plan.highlight ? "#64748b" : GRAY }}>{plan.period}</span>
-                </div>
-                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {plan.features.map(f => (
-                    <li key={f} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px", color: plan.highlight ? "#cbd5e1" : GRAY }}>
-                      <Check size={14} color={plan.highlight ? "#4ade80" : TEAL} strokeWidth={2.5} style={{ flexShrink: 0 }} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/signup" style={{
-                  display: "block", textAlign: "center", padding: "12px",
-                  borderRadius: "8px", fontWeight: 700, fontSize: "14px",
-                  background: plan.highlight ? TEAL : NAVY,
-                  color: "white", textDecoration: "none",
-                }}>
-                  {plan.cta}
-                </Link>
-              </div>
-            ))}
+        <div style={{ maxWidth: "860px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "56px" }}>
+            <p style={{ fontSize: "12px", fontWeight: 700, color: TEAL, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "12px" }}>
+              Simple pricing
+            </p>
+            <h2 style={{ fontSize: "40px", fontWeight: 900, color: NAVY, margin: "0 0 16px", letterSpacing: "-1px" }}>
+              One plan. Everything included.
+            </h2>
+            <p style={{ fontSize: "16px", color: GRAY, margin: 0 }}>
+              14-day free trial · No credit card required · Cancel anytime.
+            </p>
           </div>
 
-          <p style={{ fontSize: "13px", color: "#9ca3af", marginTop: "24px" }}>
-            Annual billing available — save 2 months. All plans include a 14-day free trial.
-          </p>
+          {/* Two-column: price card + value props */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px", alignItems: "center" }}>
+
+            {/* Price card */}
+            <div style={{ background: NAVY, borderRadius: "20px", padding: "40px", boxShadow: "0 16px 48px rgba(15,23,42,0.25)" }}>
+              <p style={{ margin: "0 0 4px", fontSize: "13px", fontWeight: 700, color: TEAL, letterSpacing: "0.05em" }}>BizIntel Pro</p>
+              <p style={{ margin: "0 0 28px", fontSize: "13px", color: "#64748b" }}>Everything. No limits.</p>
+
+              <div style={{ marginBottom: "8px" }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
+                  <span style={{ fontSize: "64px", fontWeight: 900, color: "#f8fafc", letterSpacing: "-2px", lineHeight: 1 }}>$10</span>
+                  <span style={{ fontSize: "16px", color: "#64748b", marginBottom: "8px" }}>/mo</span>
+                </div>
+                <p style={{ margin: "6px 0 0", fontSize: "13px", color: "#475569" }}>
+                  or <strong style={{ color: TEAL }}>$90/yr</strong> — save $30 (2 months free)
+                </p>
+              </div>
+
+              <div style={{ height: "1px", background: "rgba(255,255,255,0.06)", margin: "28px 0" }} />
+
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 32px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                {["Unlimited datasets & KPIs", "AI business advisor chat", "6 data integrations", "Daily auto-sync", "Data drill-in & export", "Priority support"].map(f => (
+                  <li key={f} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px", color: "#cbd5e1" }}>
+                    <Check size={14} color="#4ade80" strokeWidth={2.5} style={{ flexShrink: 0 }} />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <Link href="/signup" style={{
+                display: "block", textAlign: "center", padding: "15px",
+                borderRadius: "10px", fontWeight: 800, fontSize: "15px",
+                background: TEAL, color: "white", textDecoration: "none",
+                boxShadow: "0 4px 20px rgba(14,165,233,0.4)",
+              }}>
+                Start free trial →
+              </Link>
+            </div>
+
+            {/* Value props */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "28px", padding: "8px 0" }}>
+              {[
+                { emoji: "🚀", title: "Up and running in 60 seconds", body: "Upload a CSV or connect an integration. AI builds your full KPI dashboard automatically — no setup, no SQL, no data team." },
+                { emoji: "🧠", title: "A consultant in your pocket", body: "The AI advisor knows your actual numbers and your industry. Ask anything, get answers a consultant would charge thousands for." },
+                { emoji: "💳", title: "Less than your Netflix subscription", body: "Most BI tools start at $200–$500/mo. BizIntel gives you the same power for $10. No annual lock-in required." },
+              ].map(({ emoji, title, body }) => (
+                <div key={title} style={{ display: "flex", gap: "16px" }}>
+                  <div style={{ fontSize: "24px", lineHeight: 1, flexShrink: 0, marginTop: "2px" }}>{emoji}</div>
+                  <div>
+                    <p style={{ margin: "0 0 5px", fontSize: "15px", fontWeight: 700, color: NAVY }}>{title}</p>
+                    <p style={{ margin: 0, fontSize: "13.5px", color: GRAY, lineHeight: 1.65 }}>{body}</p>
+                  </div>
+                </div>
+              ))}
+              <p style={{ margin: "4px 0 0", fontSize: "12.5px", color: "#9ca3af" }}>
+                ✓ No credit card required &nbsp;·&nbsp; ✓ Cancel anytime &nbsp;·&nbsp; ✓ All major cards
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
