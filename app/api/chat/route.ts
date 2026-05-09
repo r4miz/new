@@ -8,38 +8,60 @@ import { validateKpiSql } from "@/lib/sql/validator"
 import { maybeCompact } from "@/lib/ai/compaction"
 import type { ColumnMetadata } from "@/lib/types"
 
-// Route simple questions to Haiku (10× cheaper), complex analysis to Sonnet
-const SIMPLE_PATTERN = /^(what is|what's|how much|who is|when did|show me|list|give me|tell me)/i
-const NEEDS_TOOLS    = /compare|analyz|trend|breakdown|top \d|rank|strateg|forecast|why|how (is|are|should|can)/i
+// ── Model routing ────────────────────────────────────────────────────────────
+// Complex analysis → Sonnet; simple factual → Haiku (10× cheaper)
+const COMPLEX = /compare|analyz|strateg|forecast|benchmark|trend|breakdown|top \d|rank|why|how (is|are|should|can)|hormozi|recommend|advise|improve/i
 
-function selectModel(lastUserMessage: string): string {
-  if (NEEDS_TOOLS.test(lastUserMessage))   return "claude-sonnet-4-6"
-  if (SIMPLE_PATTERN.test(lastUserMessage)) return "claude-haiku-4-5-20251001"
-  return "claude-sonnet-4-6" // default to Sonnet for quality
+function selectModel(lastMsg: string): string {
+  return COMPLEX.test(lastMsg) ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001"
 }
 
-// Tool definition is fully static — marked for KV-cache
+// ── Tool definitions (all three marked for KV-cache on the last one) ─────────
 const QUERY_TOOL: Anthropic.Tool = {
   name: "query_data",
-  description:
-    "Run a SQL SELECT query against the client's business data to retrieve numbers, trends, or facts needed to answer a question. Use this whenever precision matters — never guess when you can query.",
+  description: "Run a SQL SELECT against the client's business data to get specific numbers, trends, or facts. Use when the question requires their actual data. Never guess numbers you can query.",
   input_schema: {
     type: "object" as const,
     properties: {
-      sql: {
-        type: "string",
-        description: "A valid PostgreSQL SELECT query. Must be SELECT only. Double-quote schema and table names.",
-      },
-      reason: {
-        type: "string",
-        description: "One sentence: what you are looking up and why.",
-      },
+      sql:    { type: "string", description: "Valid PostgreSQL SELECT. Must be SELECT only. Double-quote schema and table names." },
+      reason: { type: "string", description: "One sentence: what you are looking up and why." },
     },
     required: ["sql", "reason"],
   },
+}
+
+const SEARCH_KNOWLEDGE_TOOL: Anthropic.Tool = {
+  name: "search_knowledge",
+  description: "Search a curated business knowledge base containing Alex Hormozi frameworks ($100M Offers, $100M Leads, Gym Launch), top business books (Good to Great, Zero to One, Traction, E-Myth, Profit First, Start with Why, Built to Last, Never Split the Difference, Lean Startup, 4-Hour Workweek), and industry benchmarks for SaaS, e-commerce, restaurants, professional services, retail, fitness, agencies, and general SMB. Use when the user asks for advice, frameworks, benchmarks, growth strategies, pricing help, or how to improve their business.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      query: { type: "string", description: "What to search for. Be specific: 'Hormozi pricing psychology', 'SaaS churn benchmarks', 'how to construct a grand slam offer', 'profit first cash allocation percentages'." },
+    },
+    required: ["query"],
+  },
+}
+
+const CREATE_KPI_TOOL: Anthropic.Tool = {
+  name: "create_kpi",
+  description: "Create a new KPI tile on the client's dashboard. Use ONLY when the client explicitly asks to 'add', 'create', 'save', 'track', or 'put on my dashboard' a specific metric. Do not use proactively.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      name:        { type: "string",  description: "Short KPI name, 2-5 words. e.g. 'Monthly Revenue Trend'" },
+      description: { type: "string",  description: "What this measures and why it matters, 1-2 sentences." },
+      sql:         { type: "string",  description: "Valid PostgreSQL SELECT query that returns the data for this KPI." },
+      chart_type:  { type: "string",  enum: ["line", "area", "bar", "number"], description: "Best chart type for this data." },
+    },
+    required: ["name", "description", "sql", "chart_type"],
+  },
+  // Last tool — cache_control caches all three tool definitions
   cache_control: { type: "ephemeral" },
 }
 
+const TOOLS: Anthropic.Tool[] = [QUERY_TOOL, SEARCH_KNOWLEDGE_TOOL, CREATE_KPI_TOOL]
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 async function runQuery(sql: string): Promise<{ rows: unknown[]; error?: string }> {
   const v = validateKpiSql(sql)
   if (!v.valid) return { rows: [], error: v.error }
@@ -48,10 +70,55 @@ async function runQuery(sql: string): Promise<{ rows: unknown[]; error?: string 
   return { rows: Array.isArray(data) ? data : [] }
 }
 
+async function searchKnowledge(query: string): Promise<string> {
+  const { data, error } = await adminClient
+    .from("knowledge_chunks")
+    .select("title, source, content")
+    .textSearch("search_vector", query.split(" ").join(" | "), { type: "plain" })
+    .limit(4)
+
+  if (error || !data?.length) {
+    return "No specific knowledge found for this query. Answer from your general expertise."
+  }
+
+  return data.map((c, i) =>
+    `[${i + 1}] ${c.title}\nSource: ${c.source}\n${c.content}`
+  ).join("\n\n---\n\n")
+}
+
+async function createKpi(
+  input: { name: string; description: string; sql: string; chart_type: string },
+  workspaceId: string,
+  datasets: Array<{ id: string; table_name: string }>
+): Promise<string> {
+  const v = validateKpiSql(input.sql)
+  if (!v.valid) return `Cannot create KPI — invalid SQL: ${v.error}`
+
+  // Match dataset from the SQL (look for the table name referenced)
+  const datasetId = datasets.find(d =>
+    input.sql.toLowerCase().includes(d.table_name.toLowerCase())
+  )?.id ?? datasets[0]?.id
+
+  if (!datasetId) return "Cannot create KPI — no datasets found. Please upload data first."
+
+  const { error } = await adminClient.from("kpi_proposals").insert({
+    workspace_id:  workspaceId,
+    dataset_id:    datasetId,
+    name:          input.name,
+    description:   input.description,
+    proposed_sql:  input.sql,
+    chart_type:    input.chart_type,
+  })
+
+  if (error) return `Failed to create KPI: ${error.message}`
+  return `✓ KPI "${input.name}" has been added to your dashboard. Go to the Dashboard tab to see it.`
+}
+
 function sseChunk(type: string, data: Record<string, unknown> = {}): Uint8Array {
   return new TextEncoder().encode(`data: ${JSON.stringify({ type, ...data })}\n\n`)
 }
 
+// ── Main handler ──────────────────────────────────────────────────────────────
 export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user }, error: authErr } = await supabase.auth.getUser()
@@ -77,7 +144,7 @@ export async function POST(request: Request) {
       .select("name, industry, primary_currency, schema_name")
       .eq("id", workspace_id).maybeSingle(),
     adminClient.from("datasets")
-      .select("name, table_name, ai_description, column_metadata")
+      .select("id, name, table_name, ai_description, column_metadata")
       .eq("workspace_id", workspace_id),
   ])
   if (!workspace) return NextResponse.json({ error: "Workspace not found" }, { status: 404 })
@@ -95,14 +162,18 @@ export async function POST(request: Request) {
     })),
   })
 
-  // Stable system prompt cached by KV-cache across all turns/conversations
+  // Stable system prompt — KV-cached across turns and conversations
   const systemBlock: Anthropic.TextBlockParam[] = [
     { type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } },
   ]
 
-  // Select model based on question complexity, then apply compaction
-  const lastUserText = (messages[messages.length - 1]?.content ?? "") as string
-  const model        = selectModel(typeof lastUserText === "string" ? lastUserText : "")
+  // Dataset list for create_kpi handler
+  const datasetList = (datasets ?? []).map(d => ({ id: d.id, table_name: d.table_name }))
+
+  // Model routing based on question complexity
+  const lastContent = messages[messages.length - 1]?.content
+  const lastText    = typeof lastContent === "string" ? lastContent : ""
+  const model       = selectModel(lastText)
 
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>()
   const writer = writable.getWriter()
@@ -112,15 +183,15 @@ export async function POST(request: Request) {
       writer.write(sseChunk(type, data))
 
     try {
-      // Compact history if it's grown large — slides the window cheaply via Haiku
+      // Sliding window compaction — keeps context lean on long conversations
       let history = await maybeCompact(messages)
 
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 6; i++) {
         const stream = anthropic.messages.stream({
           model,
           max_tokens: 2048,
           system:     systemBlock,
-          tools:      [QUERY_TOOL],
+          tools:      TOOLS,
           messages:   history,
         })
 
@@ -133,34 +204,47 @@ export async function POST(request: Request) {
         const finalMsg  = await stream.finalMessage()
         const stopReason = finalMsg.stop_reason
 
-        if (stopReason === "tool_use") {
-          history.push({ role: "assistant", content: finalMsg.content })
-          const results: Anthropic.ToolResultBlockParam[] = []
+        if (stopReason !== "tool_use") {
+          await send("status", { message: null })
+          break
+        }
 
-          for (const block of finalMsg.content) {
-            if (block.type !== "tool_use") continue
+        // Handle all tool calls in this turn
+        history.push({ role: "assistant", content: finalMsg.content })
+        const results: Anthropic.ToolResultBlockParam[] = []
+
+        for (const block of finalMsg.content) {
+          if (block.type !== "tool_use") continue
+
+          if (block.name === "query_data") {
             const input = block.input as { sql: string; reason: string }
             await send("status", { message: `Querying: ${input.reason}` })
             const { rows, error } = await runQuery(input.sql)
-
-            // Compress large results — only send top 50 rows, not 100, to keep token count down
-            const resultContent = error
-              ? `Error: ${error}`
-              : rows.length === 0
-              ? "Query returned no rows."
-              : JSON.stringify(rows.slice(0, 50))
-
-            results.push({ type: "tool_result", tool_use_id: block.id, content: resultContent })
+            results.push({
+              type: "tool_result", tool_use_id: block.id,
+              content: error ? `Error: ${error}`
+                : rows.length === 0 ? "Query returned no rows."
+                : JSON.stringify(rows.slice(0, 50)),
+            })
           }
 
-          history.push({ role: "user", content: results })
-          await send("status", { message: "Analyzing results…" })
-          continue
+          else if (block.name === "search_knowledge") {
+            const input = block.input as { query: string }
+            await send("status", { message: `Searching knowledge base…` })
+            const result = await searchKnowledge(input.query)
+            results.push({ type: "tool_result", tool_use_id: block.id, content: result })
+          }
+
+          else if (block.name === "create_kpi") {
+            const input = block.input as { name: string; description: string; sql: string; chart_type: string }
+            await send("status", { message: `Creating KPI: ${input.name}…` })
+            const result = await createKpi(input, workspace_id, datasetList)
+            results.push({ type: "tool_result", tool_use_id: block.id, content: result })
+          }
         }
 
-        // Final answer streamed — done
-        await send("status", { message: null })
-        break
+        history.push({ role: "user", content: results })
+        await send("status", { message: "Analyzing…" })
       }
 
       await send("done", {})
