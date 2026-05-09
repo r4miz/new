@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspaceBySlug, getWorkspaceMembership } from "@/lib/db/workspaces"
-import { getDaysLeft } from "@/lib/billing"
-import { TrialBanner } from "@/components/billing/TrialBanner"
 import { UpgradeGate } from "@/components/billing/UpgradeGate"
 import { Sidebar } from "@/components/layout/Sidebar"
 
@@ -24,31 +22,23 @@ export default async function WorkspaceLayout({
   const membership = await getWorkspaceMembership(workspace.id, user.id)
   if (!membership) redirect("/onboarding")
 
-  const status     = workspace.subscription_status
-  const daysLeft   = getDaysLeft(workspace.trial_ends_at)
-  const isTrialing = status === "trialing" && daysLeft > 0
-  const isExpired  = status === "expired" || status === "canceled" ||
-                     (status === "trialing" && daysLeft === 0) ||
-                     status === "past_due"
+  const status    = workspace.subscription_status
+  // trialing is now treated as unsubscribed — no free trial
+  const isExpired = status !== "active"
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#07090e" }}>
-      <Sidebar workspace={workspace} daysLeft={daysLeft} subscriptionStatus={status} />
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#060d1a" }}>
+      <Sidebar workspace={workspace} subscriptionStatus={status} />
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
-        {isTrialing && (
-          <TrialBanner daysLeft={daysLeft} workspaceSlug={workspaceSlug} />
+      <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0, overflowY: "auto" }}>
+        {isExpired ? (
+          <UpgradeGate workspace={{ id: workspace.id, name: workspace.name }}>
+            {children}
+          </UpgradeGate>
+        ) : (
+          children
         )}
-        <main style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
-          {isExpired ? (
-            <UpgradeGate workspace={{ id: workspace.id, name: workspace.name }}>
-              {children}
-            </UpgradeGate>
-          ) : (
-            children
-          )}
-        </main>
-      </div>
+      </main>
     </div>
   )
 }

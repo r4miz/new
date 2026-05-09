@@ -31,7 +31,7 @@ export default function SignupPage() {
         Create your account
       </h1>
       <p style={{ fontSize: "14px", color: "#64748b", margin: "0 0 36px" }}>
-        14-day free trial. No credit card required.
+        $10/mo or $90/yr. Cancel anytime.
       </p>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
@@ -69,7 +69,7 @@ export default function SignupPage() {
           transition: "background 0.15s",
         }}>
           {loading && <Loader2 size={15} className="animate-spin" />}
-          {loading ? "Creating account…" : "Start free trial"}
+          {loading ? "Creating account…" : "Create account"}
         </button>
       </form>
 

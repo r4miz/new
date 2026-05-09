@@ -81,7 +81,7 @@ export default function LandingPage() {
             padding: "8px 18px", borderRadius: "7px", fontSize: "14px", fontWeight: 600,
             background: NAVY, color: "white", textDecoration: "none",
           }}>
-            Start free trial →
+            Get started →
           </Link>
         </div>
       </nav>
@@ -132,7 +132,7 @@ export default function LandingPage() {
               padding: "14px 28px", borderRadius: "9px", textDecoration: "none",
               boxShadow: "0 8px 24px rgba(14,165,233,0.35)",
             }}>
-              Start free — 14 days
+              Get started
               <ArrowRight size={16} />
             </Link>
             <Link href="/login" style={{
@@ -146,7 +146,7 @@ export default function LandingPage() {
           </div>
 
           <p style={{ fontSize: "13px", color: "#475569", marginTop: "20px" }}>
-            No credit card required · Cancel anytime · Full access during trial
+            $10/mo or $90/yr · Cancel anytime · All major cards
           </p>
 
           {/* Mock dashboard preview */}
@@ -333,7 +333,7 @@ export default function LandingPage() {
               One plan. Everything included.
             </h2>
             <p style={{ fontSize: "16px", color: GRAY, margin: 0 }}>
-              14-day free trial · No credit card required · Cancel anytime.
+              $10/mo or $90/yr. Cancel anytime.
             </p>
           </div>
 
@@ -372,7 +372,7 @@ export default function LandingPage() {
                 background: TEAL, color: "white", textDecoration: "none",
                 boxShadow: "0 4px 20px rgba(14,165,233,0.4)",
               }}>
-                Start free trial →
+                Get started →
               </Link>
             </div>
 
@@ -416,11 +416,11 @@ export default function LandingPage() {
             padding: "16px 36px", borderRadius: "9px", textDecoration: "none",
             boxShadow: "0 8px 28px rgba(14,165,233,0.35)",
           }}>
-            Start your free trial
+            Get started today
             <ArrowRight size={17} />
           </Link>
           <p style={{ fontSize: "13px", color: "#334155", marginTop: "16px" }}>
-            14 days free · No credit card · Cancel anytime
+            $10/mo or $90/yr · Cancel anytime · All major cards
           </p>
         </div>
       </section>

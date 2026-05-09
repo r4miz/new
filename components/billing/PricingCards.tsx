@@ -150,7 +150,7 @@ export function PricingCards({ workspaceId, currentPlan }: Props) {
             }}
           >
             {loading && <Loader2 size={14} className="animate-spin" />}
-            {isCurrent ? "You're on Pro" : loading ? "Redirecting…" : `Start 14-day free trial →`}
+            {isCurrent ? "You're on Pro" : loading ? "Redirecting…" : "Subscribe now →"}
           </button>
 
           <p style={{ textAlign: "center", fontSize: "11.5px", color: T.textDim, marginTop: "12px" }}>

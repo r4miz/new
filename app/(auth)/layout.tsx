@@ -77,7 +77,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           paddingTop: "24px",
         }}>
           <p style={{ fontSize: "12px", color: "#475569", margin: 0 }}>
-            14-day free trial · No credit card required · Cancel anytime
+            $10/mo or $90/yr · Cancel anytime · All major cards
           </p>
         </div>
       </div>

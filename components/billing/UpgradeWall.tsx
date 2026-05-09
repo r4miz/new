@@ -1,32 +1,28 @@
 import { Lock } from "lucide-react"
 import { PricingCards } from "./PricingCards"
+import { T } from "@/lib/theme"
 
-interface Props {
-  workspace: { id: string; name: string }
-}
+interface Props { workspace: { id: string; name: string } }
 
 export function UpgradeWall({ workspace }: Props) {
   return (
-    <div style={{ flex: 1, overflowY: "auto", background: "#07090e" }}>
-      <div style={{ maxWidth: "900px", margin: "0 auto", padding: "60px 36px" }}>
-        <div style={{ textAlign: "center", marginBottom: "48px" }}>
-          <div style={{
-            display: "inline-flex", alignItems: "center", justifyContent: "center",
-            width: "56px", height: "56px", borderRadius: "16px", marginBottom: "20px",
-            background: "rgba(14,165,233,0.1)", border: "1px solid rgba(14,165,233,0.2)",
-          }}>
-            <Lock size={24} color="#0ea5e9" />
-          </div>
-          <h1 style={{ margin: "0 0 12px", fontSize: "28px", fontWeight: 800, color: "#f8fafc", letterSpacing: "-0.5px" }}>
-            Your free trial has ended
-          </h1>
-          <p style={{ margin: "0 auto", fontSize: "15px", color: "#475569", maxWidth: "440px", lineHeight: 1.7 }}>
-            Choose a plan to restore access to{" "}
-            <span style={{ fontWeight: 600, color: "#94a3b8" }}>{workspace.name}</span>{" "}
-            and keep your AI-powered dashboard running.
-          </p>
+    <div style={{ flex: 1, overflowY: "auto", background: T.bg }}>
+      <div style={{ maxWidth: "600px", margin: "0 auto", padding: "64px 28px", textAlign: "center" }}>
+        <div style={{
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          width: "52px", height: "52px", borderRadius: "14px", marginBottom: "20px",
+          background: T.accentDim, border: `1px solid rgba(14,165,233,0.2)`,
+        }}>
+          <Lock size={22} color={T.accent} />
         </div>
-
+        <h1 style={{ margin: "0 0 10px", fontSize: "24px", fontWeight: 800, color: T.text, letterSpacing: "-0.4px" }}>
+          Subscribe to get started
+        </h1>
+        <p style={{ margin: "0 auto 40px", fontSize: "14px", color: T.textMuted, maxWidth: "380px", lineHeight: 1.7 }}>
+          Choose a plan to unlock{" "}
+          <span style={{ fontWeight: 600, color: T.textSec }}>{workspace.name}</span>{" "}
+          and start turning your data into decisions.
+        </p>
         <PricingCards workspaceId={workspace.id} />
       </div>
     </div>
