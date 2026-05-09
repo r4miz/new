@@ -4,6 +4,7 @@ import { adminClient } from "@/lib/supabase/admin"
 import { getWorkspaceBySlug } from "@/lib/db/workspaces"
 import { ChatInterface } from "@/components/chat/ChatInterface"
 import type { Dataset } from "@/lib/types"
+import { T } from "@/lib/theme"
 
 export default async function ChatPage({
   params,
@@ -18,20 +19,24 @@ export default async function ChatPage({
   const workspace = await getWorkspaceBySlug(workspaceSlug)
   if (!workspace) redirect("/onboarding")
 
-  const { data: datasets } = await adminClient
-    .from("datasets").select("*").eq("workspace_id", workspace.id).order("created_at", { ascending: false })
+  const [{ data: datasets }, { data: sessions }] = await Promise.all([
+    adminClient.from("datasets").select("*").eq("workspace_id", workspace.id).order("created_at", { ascending: false }),
+    adminClient.from("chat_sessions")
+      .select("id, title, updated_at")
+      .eq("workspace_id", workspace.id)
+      .eq("user_id", user.id)
+      .order("updated_at", { ascending: false })
+      .limit(40),
+  ])
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#060d1a" }}>
-      <div style={{ background: "#0b1629", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "20px 28px", flexShrink: 0 }}>
-        <h1 style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: "#e2e8f0" }}>AI Advisor</h1>
-        <p style={{ margin: "3px 0 0", fontSize: "13px", color: "#64748b" }}>
-          {workspace.industry ? `Expert in ${workspace.industry} · powered by your data` : "Business advisor · powered by your data"}
-        </p>
-      </div>
-      <div style={{ flex: 1, overflow: "hidden" }}>
-        <ChatInterface workspace={workspace} datasets={(datasets ?? []) as Dataset[]} />
-      </div>
+    <div style={{ display: "flex", height: "100%", background: T.bg }}>
+      <ChatInterface
+        workspace={workspace}
+        datasets={(datasets ?? []) as Dataset[]}
+        userId={user.id}
+        initialSessions={(sessions ?? []) as Array<{ id: string; title: string; updated_at: string }>}
+      />
     </div>
   )
 }
