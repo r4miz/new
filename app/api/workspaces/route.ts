@@ -67,6 +67,7 @@ export async function POST(request: Request) {
       primary_currency,
       owner_id: user.id,
       schema_name: schemaName,
+      subscription_status: "active",
     })
     .select()
     .single()
