@@ -1,6 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk"
 import { adminClient } from "@/lib/supabase/admin"
 
+if (!process.env.ANTHROPIC_API_KEY) {
+  throw new Error("ANTHROPIC_API_KEY is not configured")
+}
+
 export const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 // Pricing per 1M tokens (USD)
@@ -40,6 +44,7 @@ export async function callClaude(
     cache_creation_input_tokens?: number
   }
   const pricing = PRICING[model]
+  if (!pricing) console.warn("[ai/client] unknown model pricing:", model)
   const cacheRead   = usage.cache_read_input_tokens ?? 0
   const cacheWrite  = usage.cache_creation_input_tokens ?? 0
   const regularIn   = usage.input_tokens
@@ -50,13 +55,15 @@ export async function callClaude(
       (usage.output_tokens / 1_000_000) * pricing.output
     : null
 
-  void adminClient.from("ai_usage_log").insert({
+  adminClient.from("ai_usage_log").insert({
     workspace_id:       options.workspaceId ?? null,
     model,
     endpoint:           options.endpoint,
     prompt_tokens:      usage.input_tokens,
     completion_tokens:  usage.output_tokens,
     cost_usd:           cost,
+  }).then(({ error }) => {
+    if (error) console.error("[ai_usage_log] insert failed:", error.message)
   })
 
   return text

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import type { KpiProposal } from "@/lib/types"
+import { T } from "@/lib/theme"
 import {
   TrendingUp, TrendingDown, BarChart2, Hash, AlertCircle,
   RefreshCw, Award, Minus,
@@ -14,29 +15,11 @@ import {
 interface Props { kpi: KpiProposal }
 type Row = Record<string, unknown>
 
-// ── Colours ──────────────────────────────────────────────────────────────────
-const C = {
-  bg:       "#060d1a",
-  surface:  "#0b1629",
-  surface2: "#0f1d30",
-  surface3: "#131e30",
-  border:   "rgba(255,255,255,0.06)",
-  borderMd: "rgba(255,255,255,0.10)",
-  text:     "#f1f5f9",
-  textSub:  "#94a3b8",
-  textDim:  "#475569",
-  green:    "#10b981",
-  red:      "#ef4444",
-  blue:     "#0ea5e9",
-  purple:   "#8b5cf6",
-  amber:    "#f59e0b",
-}
-
 const ACCENT = {
-  line:   { stroke: C.blue,   fill: C.blue   },
-  area:   { stroke: C.purple, fill: C.purple  },
-  bar:    { stroke: C.amber,  fill: C.amber   },
-  number: { stroke: C.green,  fill: C.green   },
+  line:   { stroke: T.accent,  fill: T.accent  },
+  area:   { stroke: T.purple,  fill: T.purple   },
+  bar:    { stroke: T.amber,   fill: T.amber    },
+  number: { stroke: T.green,   fill: T.green    },
 } as const
 
 // ── Formatters ────────────────────────────────────────────────────────────────
@@ -70,28 +53,28 @@ function pctChange(a: number, b: number): number | null {
 function StatCard({ title, value, sub }: { title: string; value: string; sub?: string }) {
   return (
     <div style={{
-      background: C.surface2, border: `1px solid ${C.border}`,
+      background: T.surface2, border: `1px solid ${T.border}`,
       borderRadius: "12px", padding: "18px 20px",
     }}>
-      <p style={{ margin: "0 0 8px", fontSize: "11px", fontWeight: 600, color: C.textDim, textTransform: "uppercase", letterSpacing: "0.07em" }}>
+      <p style={{ margin: "0 0 8px", fontSize: "11px", fontWeight: 600, color: T.textDim, textTransform: "uppercase", letterSpacing: "0.07em" }}>
         {title}
       </p>
-      <p style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: C.text, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.5px" }}>
+      <p style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: T.text, fontVariantNumeric: "tabular-nums", letterSpacing: "-0.5px" }}>
         {value}
       </p>
-      {sub && <p style={{ margin: "4px 0 0", fontSize: "11px", color: C.textDim }}>{sub}</p>}
+      {sub && <p style={{ margin: "4px 0 0", fontSize: "11px", color: T.textDim }}>{sub}</p>}
     </div>
   )
 }
 
 const TIP_STYLE: React.CSSProperties = {
-  background: "#141d2e", border: `1px solid ${C.borderMd}`,
-  borderRadius: "8px", fontSize: "12px", color: C.text,
+  background: T.surface2, border: `1px solid ${T.borderMd}`,
+  borderRadius: "8px", fontSize: "12px", color: T.text,
   boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
 }
 
 function Insight({ icon, text, positive }: { icon: React.ReactNode; text: string; positive?: boolean | null }) {
-  const color = positive === true ? C.green : positive === false ? C.red : C.textSub
+  const color = positive === true ? T.green : positive === false ? T.red : T.textSec
   return (
     <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
       <div style={{
@@ -101,7 +84,7 @@ function Insight({ icon, text, positive }: { icon: React.ReactNode; text: string
       }}>
         {icon}
       </div>
-      <p style={{ margin: 0, fontSize: "13px", color: C.textSub, lineHeight: 1.6 }}>{text}</p>
+      <p style={{ margin: 0, fontSize: "13px", color: T.textSec, lineHeight: 1.6 }}>{text}</p>
     </div>
   )
 }
@@ -208,7 +191,7 @@ export function KpiDetail({ kpi }: Props) {
 
   // ── Render ────────────────────────────────────────────────────────────────
   const card: React.CSSProperties = {
-    background: C.surface, border: `1px solid ${C.border}`, borderRadius: "14px",
+    background: T.surface, border: `1px solid ${T.border}`, borderRadius: "14px",
   }
 
   return (
@@ -225,10 +208,10 @@ export function KpiDetail({ kpi }: Props) {
             {kpi.chart_type === "number" ? <Hash size={20} /> : kpi.chart_type === "bar" ? <BarChart2 size={20} /> : <TrendingUp size={20} />}
           </div>
           <div>
-            <h1 style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: C.text, letterSpacing: "-0.4px" }}>
+            <h1 style={{ margin: 0, fontSize: "22px", fontWeight: 800, color: T.text, letterSpacing: "-0.4px" }}>
               {kpi.name}
             </h1>
-            <p style={{ margin: "4px 0 0", fontSize: "13px", color: C.textDim, maxWidth: "600px" }}>
+            <p style={{ margin: "4px 0 0", fontSize: "13px", color: T.textDim, maxWidth: "600px" }}>
               {kpi.description}
             </p>
           </div>
@@ -239,7 +222,7 @@ export function KpiDetail({ kpi }: Props) {
               display: "flex", alignItems: "center", gap: "6px",
               fontSize: "13px", fontWeight: 700, padding: "8px 14px", borderRadius: "10px",
               background: overall >= 0 ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)",
-              color: overall >= 0 ? C.green : C.red,
+              color: overall >= 0 ? T.green : T.red,
               border: `1px solid ${overall >= 0 ? "rgba(16,185,129,0.2)" : "rgba(239,68,68,0.2)"}`,
             }}>
               {overall >= 0 ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
@@ -248,9 +231,9 @@ export function KpiDetail({ kpi }: Props) {
           )}
           <button onClick={load} style={{
             display: "flex", alignItems: "center", gap: "6px",
-            background: C.surface2, border: `1px solid ${C.borderMd}`,
+            background: T.surface2, border: `1px solid ${T.borderMd}`,
             borderRadius: "8px", padding: "8px 14px", cursor: "pointer",
-            fontSize: "12px", fontWeight: 600, color: C.textSub,
+            fontSize: "12px", fontWeight: 600, color: T.textSec,
           }}>
             <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
             Refresh
@@ -289,9 +272,9 @@ export function KpiDetail({ kpi }: Props) {
             /* Single scalar value */
             <div style={{
               ...card, padding: "48px", textAlign: "center",
-              background: `linear-gradient(135deg, ${C.surface} 0%, ${C.surface2} 100%)`,
+              background: `linear-gradient(135deg, ${T.surface} 0%, ${T.surface2} 100%)`,
             }}>
-              <p style={{ margin: "0 0 12px", fontSize: "12px", fontWeight: 600, color: C.textDim, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              <p style={{ margin: "0 0 12px", fontSize: "12px", fontWeight: 600, color: T.textDim, textTransform: "uppercase", letterSpacing: "0.08em" }}>
                 {numCol.replace(/_/g, " ")}
               </p>
               <p style={{
@@ -302,7 +285,7 @@ export function KpiDetail({ kpi }: Props) {
               }}>
                 {fmt(rows[0][numCol])}
               </p>
-              <p style={{ margin: "16px 0 0", fontSize: "13px", color: C.textDim }}>
+              <p style={{ margin: "16px 0 0", fontSize: "13px", color: T.textDim }}>
                 Calculated from your dataset
               </p>
             </div>
@@ -319,7 +302,7 @@ export function KpiDetail({ kpi }: Props) {
           {/* ── Full chart ──────────────────────────────────────────────────── */}
           {!isNum && chartData.length > 1 && (
             <div style={{ ...card, padding: "24px 20px 16px" }}>
-              <p style={{ margin: "0 0 20px", fontSize: "13px", fontWeight: 600, color: C.textSub }}>
+              <p style={{ margin: "0 0 20px", fontSize: "13px", fontWeight: 600, color: T.textSec }}>
                 {numCol.replace(/_/g, " ")}
               </p>
               <div style={{ height: "340px" }}>
@@ -332,10 +315,10 @@ export function KpiDetail({ kpi }: Props) {
                           <stop offset="100%" stopColor={accent.fill} stopOpacity={0.5} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
-                      <XAxis dataKey="label" tick={{ fontSize: 12, fill: C.textDim }} tickLine={false} axisLine={false} />
-                      <YAxis tickFormatter={v => fmt(v)} tick={{ fontSize: 11, fill: C.textDim }} tickLine={false} axisLine={false} width={70} />
-                      <ReferenceLine y={avg} stroke={C.textDim} strokeDasharray="4 4" label={{ value: "avg", position: "right", fontSize: 10, fill: C.textDim }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={T.border} vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 12, fill: T.textDim }} tickLine={false} axisLine={false} />
+                      <YAxis tickFormatter={v => fmt(v)} tick={{ fontSize: 11, fill: T.textDim }} tickLine={false} axisLine={false} width={70} />
+                      <ReferenceLine y={avg} stroke={T.textDim} strokeDasharray="4 4" label={{ value: "avg", position: "right", fontSize: 10, fill: T.textDim }} />
                       <Tooltip contentStyle={TIP_STYLE} formatter={(v: unknown) => [fmt(v, true), numCol.replace(/_/g, " ")]} />
                       <Bar dataKey="value" fill={`url(#${gradId})`} radius={[5, 5, 0, 0]} />
                     </BarChart>
@@ -347,19 +330,19 @@ export function KpiDetail({ kpi }: Props) {
                           <stop offset="100%" stopColor={accent.fill} stopOpacity={0.02} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
-                      <XAxis dataKey="label" tick={{ fontSize: 12, fill: C.textDim }} tickLine={false} axisLine={false} />
-                      <YAxis tickFormatter={v => fmt(v)} tick={{ fontSize: 11, fill: C.textDim }} tickLine={false} axisLine={false} width={70} />
-                      <ReferenceLine y={avg} stroke={C.textDim} strokeDasharray="4 4" label={{ value: "avg", position: "right", fontSize: 10, fill: C.textDim }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={T.border} vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 12, fill: T.textDim }} tickLine={false} axisLine={false} />
+                      <YAxis tickFormatter={v => fmt(v)} tick={{ fontSize: 11, fill: T.textDim }} tickLine={false} axisLine={false} width={70} />
+                      <ReferenceLine y={avg} stroke={T.textDim} strokeDasharray="4 4" label={{ value: "avg", position: "right", fontSize: 10, fill: T.textDim }} />
                       <Tooltip contentStyle={TIP_STYLE} formatter={(v: unknown) => [fmt(v, true), numCol.replace(/_/g, " ")]} />
                       <Area type="monotone" dataKey="value" stroke={accent.stroke} strokeWidth={2.5} fill={`url(#${gradId})`} dot={{ r: 4, fill: accent.stroke, strokeWidth: 0 }} activeDot={{ r: 6 }} />
                     </AreaChart>
                   ) : (
                     <LineChart data={chartData} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
-                      <XAxis dataKey="label" tick={{ fontSize: 12, fill: C.textDim }} tickLine={false} axisLine={false} />
-                      <YAxis tickFormatter={v => fmt(v)} tick={{ fontSize: 11, fill: C.textDim }} tickLine={false} axisLine={false} width={70} />
-                      <ReferenceLine y={avg} stroke={C.textDim} strokeDasharray="4 4" label={{ value: "avg", position: "right", fontSize: 10, fill: C.textDim }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke={T.border} vertical={false} />
+                      <XAxis dataKey="label" tick={{ fontSize: 12, fill: T.textDim }} tickLine={false} axisLine={false} />
+                      <YAxis tickFormatter={v => fmt(v)} tick={{ fontSize: 11, fill: T.textDim }} tickLine={false} axisLine={false} width={70} />
+                      <ReferenceLine y={avg} stroke={T.textDim} strokeDasharray="4 4" label={{ value: "avg", position: "right", fontSize: 10, fill: T.textDim }} />
                       <Tooltip contentStyle={TIP_STYLE} formatter={(v: unknown) => [fmt(v, true), numCol.replace(/_/g, " ")]} />
                       <Line type="monotone" dataKey="value" stroke={accent.stroke} strokeWidth={2.5} dot={{ r: 4, fill: accent.stroke, strokeWidth: 0 }} activeDot={{ r: 6 }} />
                     </LineChart>
@@ -372,11 +355,11 @@ export function KpiDetail({ kpi }: Props) {
           {/* ── Data breakdown table ────────────────────────────────────────── */}
           {tableRows.length > 0 && (
             <div style={{ ...card, overflow: "hidden" }}>
-              <div style={{ padding: "16px 24px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: C.textSub }}>
+              <div style={{ padding: "16px 24px", borderBottom: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <p style={{ margin: 0, fontSize: "13px", fontWeight: 700, color: T.textSec }}>
                   {isTimeSeries ? "Period Breakdown" : "Full Breakdown"}
                 </p>
-                <p style={{ margin: 0, fontSize: "12px", color: C.textDim }}>
+                <p style={{ margin: 0, fontSize: "12px", color: T.textDim }}>
                   {tableRows.length} {isTimeSeries ? "periods" : "entries"}
                 </p>
               </div>
@@ -384,25 +367,25 @@ export function KpiDetail({ kpi }: Props) {
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ background: C.surface2 }}>
+                    <tr style={{ background: T.surface2 }}>
                       {!isTimeSeries && (
-                        <th style={{ padding: "11px 20px", textAlign: "left", fontSize: "11px", fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: "0.07em", width: "40px" }}>
+                        <th style={{ padding: "11px 20px", textAlign: "left", fontSize: "11px", fontWeight: 700, color: T.textDim, textTransform: "uppercase", letterSpacing: "0.07em", width: "40px" }}>
                           #
                         </th>
                       )}
-                      <th style={{ padding: "11px 20px", textAlign: "left", fontSize: "11px", fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: "0.07em" }}>
+                      <th style={{ padding: "11px 20px", textAlign: "left", fontSize: "11px", fontWeight: 700, color: T.textDim, textTransform: "uppercase", letterSpacing: "0.07em" }}>
                         {lblCol.replace(/_/g, " ")}
                       </th>
-                      <th style={{ padding: "11px 20px", textAlign: "right", fontSize: "11px", fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: "0.07em" }}>
+                      <th style={{ padding: "11px 20px", textAlign: "right", fontSize: "11px", fontWeight: 700, color: T.textDim, textTransform: "uppercase", letterSpacing: "0.07em" }}>
                         {numCol.replace(/_/g, " ")}
                       </th>
                       {!isTimeSeries && total > 0 && (
-                        <th style={{ padding: "11px 20px", textAlign: "left", fontSize: "11px", fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: "0.07em", minWidth: "160px" }}>
+                        <th style={{ padding: "11px 20px", textAlign: "left", fontSize: "11px", fontWeight: 700, color: T.textDim, textTransform: "uppercase", letterSpacing: "0.07em", minWidth: "160px" }}>
                           Share
                         </th>
                       )}
                       {isTimeSeries && (
-                        <th style={{ padding: "11px 20px", textAlign: "right", fontSize: "11px", fontWeight: 700, color: C.textDim, textTransform: "uppercase", letterSpacing: "0.07em" }}>
+                        <th style={{ padding: "11px 20px", textAlign: "right", fontSize: "11px", fontWeight: 700, color: T.textDim, textTransform: "uppercase", letterSpacing: "0.07em" }}>
                           vs Prior
                         </th>
                       )}
@@ -419,31 +402,31 @@ export function KpiDetail({ kpi }: Props) {
 
                       return (
                         <tr key={i} style={{
-                          borderTop: `1px solid ${C.border}`,
+                          borderTop: `1px solid ${T.border}`,
                           background: isTop ? `${accent.fill}06` : undefined,
                         }}>
                           {!isTimeSeries && (
-                            <td style={{ padding: "13px 20px", fontSize: "12px", fontWeight: 700, color: i < 3 ? accent.stroke : C.textDim }}>
+                            <td style={{ padding: "13px 20px", fontSize: "12px", fontWeight: 700, color: i < 3 ? accent.stroke : T.textDim }}>
                               {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`}
                             </td>
                           )}
-                          <td style={{ padding: "13px 20px", fontSize: "13px", fontWeight: isTop ? 700 : 400, color: isTop ? C.text : C.textSub, whiteSpace: "nowrap" }}>
+                          <td style={{ padding: "13px 20px", fontSize: "13px", fontWeight: isTop ? 700 : 400, color: isTop ? T.text : T.textSec, whiteSpace: "nowrap" }}>
                             {label(row[lblCol])}
                           </td>
-                          <td style={{ padding: "13px 20px", textAlign: "right", fontSize: "14px", fontWeight: 700, color: isTop ? accent.stroke : isBot ? C.textDim : C.text, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
+                          <td style={{ padding: "13px 20px", textAlign: "right", fontSize: "14px", fontWeight: 700, color: isTop ? accent.stroke : isBot ? T.textDim : T.text, fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" }}>
                             {fmt(val, true)}
                           </td>
                           {!isTimeSeries && total > 0 && (
                             <td style={{ padding: "13px 20px" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                <div style={{ flex: 1, height: "6px", background: C.surface3, borderRadius: "99px", overflow: "hidden" }}>
+                                <div style={{ flex: 1, height: "6px", background: T.surface3, borderRadius: "99px", overflow: "hidden" }}>
                                   <div style={{
                                     height: "100%", borderRadius: "99px",
                                     width: `${sharePct}%`,
                                     background: `linear-gradient(90deg, ${accent.stroke}, ${accent.stroke}88)`,
                                   }} />
                                 </div>
-                                <span style={{ fontSize: "12px", fontWeight: 600, color: C.textDim, fontVariantNumeric: "tabular-nums", minWidth: "38px", textAlign: "right" }}>
+                                <span style={{ fontSize: "12px", fontWeight: 600, color: T.textDim, fontVariantNumeric: "tabular-nums", minWidth: "38px", textAlign: "right" }}>
                                   {sharePct.toFixed(1)}%
                                 </span>
                               </div>
@@ -452,12 +435,12 @@ export function KpiDetail({ kpi }: Props) {
                           {isTimeSeries && (
                             <td style={{ padding: "13px 20px", textAlign: "right", whiteSpace: "nowrap" }}>
                               {chg === null ? (
-                                <span style={{ fontSize: "12px", color: C.textDim }}>—</span>
+                                <span style={{ fontSize: "12px", color: T.textDim }}>—</span>
                               ) : (
                                 <span style={{
                                   display: "inline-flex", alignItems: "center", gap: "3px",
                                   fontSize: "12px", fontWeight: 700,
-                                  color: chg >= 0 ? C.green : C.red,
+                                  color: chg >= 0 ? T.green : T.red,
                                   background: chg >= 0 ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)",
                                   padding: "3px 8px", borderRadius: "6px",
                                 }}>
@@ -479,7 +462,7 @@ export function KpiDetail({ kpi }: Props) {
           {/* ── Auto insights ───────────────────────────────────────────────── */}
           {insights.length > 0 && (
             <div style={{ ...card, padding: "20px 24px" }}>
-              <p style={{ margin: "0 0 16px", fontSize: "13px", fontWeight: 700, color: C.textSub }}>
+              <p style={{ margin: "0 0 16px", fontSize: "13px", fontWeight: 700, color: T.textSec }}>
                 Key Insights
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>

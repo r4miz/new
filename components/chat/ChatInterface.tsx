@@ -97,8 +97,11 @@ export function ChatInterface({ workspace, datasets, userId, initialSessions }: 
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef  = useRef<HTMLTextAreaElement>(null)
+  const abortRef  = useRef<AbortController | null>(null)
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }) }, [messages])
+
+  useEffect(() => { return () => { abortRef.current?.abort() } }, [activeId])
 
   // ── Create new session ──────────────────────────────────────────────────────
   async function newSession() {
@@ -128,6 +131,7 @@ export function ChatInterface({ workspace, datasets, userId, initialSessions }: 
   // ── Delete session ──────────────────────────────────────────────────────────
   async function deleteSession(id: string, e: React.MouseEvent) {
     e.stopPropagation()
+    if (!confirm("Delete this conversation?")) return
     await fetch("/api/chat-sessions", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "delete", session_id: id }),
@@ -163,9 +167,12 @@ export function ChatInterface({ workspace, datasets, userId, initialSessions }: 
     const history = [...messages, userMsg].map(m => ({ role: m.role, content: m.content }))
 
     try {
+      abortRef.current?.abort()
+      abortRef.current = new AbortController()
       const res = await fetch("/api/chat", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ workspace_id: workspace.id, messages: history }),
+        signal: abortRef.current.signal,
       })
       if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`)
 
@@ -220,6 +227,7 @@ export function ChatInterface({ workspace, datasets, userId, initialSessions }: 
         }
       }
     } catch (e) {
+      if ((e as { name?: string }).name === "AbortError") return
       setMessages(p => { const n = [...p]; n[n.length - 1] = { ...n[n.length - 1], content: `Connection error: ${String(e)}`, isStreaming: false, status: null }; return n })
     } finally {
       setIsLoading(false)
@@ -287,8 +295,9 @@ export function ChatInterface({ workspace, datasets, userId, initialSessions }: 
               </span>
               <button
                 onClick={e => deleteSession(s.id, e)}
-                style={{ background: "none", border: "none", cursor: "pointer", color: T.textDim, padding: "2px", display: "flex", flexShrink: 0, borderRadius: "4px", opacity: 0 }}
-                className="delete-btn"
+                style={{ background: "none", border: "none", cursor: "pointer", color: T.textDim, padding: "2px", display: "flex", flexShrink: 0, borderRadius: "4px", opacity: 0.35 }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = "1" }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "0.35" }}
                 aria-label="Delete conversation"
               >
                 <Trash2 size={11} />
@@ -400,7 +409,6 @@ export function ChatInterface({ workspace, datasets, userId, initialSessions }: 
         </div>
       </div>
 
-      <style>{`.delete-btn { opacity: 0 !important; } div:hover > .delete-btn { opacity: 1 !important; }`}</style>
     </div>
   )
 }

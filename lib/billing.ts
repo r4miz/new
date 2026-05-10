@@ -20,8 +20,11 @@ export const PLANS = {
 export type PlanKey = keyof typeof PLANS
 export type BillingPeriod = "monthly" | "yearly"
 
-export function getPriceId(plan: PlanKey, period: BillingPeriod): string | undefined {
-  return process.env[PLANS[plan][period].priceEnvKey]
+export function getPriceId(plan: PlanKey, period: BillingPeriod): string {
+  const key = PLANS[plan][period].priceEnvKey
+  const id = process.env[key]
+  if (!id) throw new Error(`Missing env var: ${key}`)
+  return id
 }
 
 export function getDaysLeft(trialEndsAt: string): number {

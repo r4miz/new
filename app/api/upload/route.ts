@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { adminClient } from "@/lib/supabase/admin"
 import { parseCSV } from "@/lib/csv/parser"
 import { sanitizeTableName, workspaceSchemaName } from "@/lib/utils"
+import { isActive } from "@/lib/billing"
 
 export const maxDuration = 60
 
@@ -49,6 +50,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `[step3-no-member] workspace_id=${workspaceId} user=${user.id}` }, { status: 403 })
   }
 
+  // Step 3b: billing check
+  const { data: workspace } = await adminClient
+    .from("workspaces")
+    .select("subscription_status, trial_ends_at")
+    .eq("id", workspaceId)
+    .maybeSingle()
+  if (!workspace || !isActive(workspace.subscription_status, workspace.trial_ends_at)) {
+    return NextResponse.json({ error: "Subscription required" }, { status: 402 })
+  }
+
+  // Step 3c: file size check
+  if (file.size > 10 * 1024 * 1024) {
+    return NextResponse.json({ error: "File too large. Maximum size is 10 MB." }, { status: 400 })
+  }
+
   // Step 4: parse CSV
   let parsed
   try {
@@ -56,6 +72,10 @@ export async function POST(request: Request) {
     parsed = parseCSV(content, file.name)
   } catch (err) {
     return NextResponse.json({ error: `[step4-parse] ${err}` }, { status: 400 })
+  }
+
+  if (parsed.rows.length > 50000) {
+    return NextResponse.json({ error: "Too many rows. Maximum is 50,000." }, { status: 400 })
   }
 
   // Step 5: insert dataset metadata (generate ID upfront for unique table name)

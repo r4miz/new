@@ -31,7 +31,7 @@ export default function SignupPage() {
         Create your account
       </h1>
       <p style={{ fontSize: "14px", color: "#64748b", margin: "0 0 36px" }}>
-        $10/mo or $90/yr. Cancel anytime.
+        Start your 7-day free trial — no credit card required.
       </p>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>

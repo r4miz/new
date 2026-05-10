@@ -16,9 +16,16 @@ export default function LoginPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null); setLoading(true)
-    const { error } = await createClient().auth.signInWithPassword({ email, password })
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) { setError(error.message); setLoading(false); return }
-    router.push("/onboarding"); router.refresh()
+    const { data: ws } = await supabase
+      .from("workspaces")
+      .select("slug")
+      .limit(1)
+      .maybeSingle()
+    router.push(ws ? `/w/${ws.slug}/dashboard` : "/onboarding")
+    router.refresh()
   }
 
   return (

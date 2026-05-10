@@ -71,11 +71,12 @@ export async function runSync(params: {
     }).select().single()
     if (error) throw new Error(`Dataset insert failed: ${error.message}`)
 
-    await adminClient.rpc("create_dataset_table", {
+    const { error: ctErr } = await adminClient.rpc("create_dataset_table", {
       p_schema_name: schemaName,
       p_table_name:  tableName,
       p_columns:     columnDefs,
     })
+    if (ctErr) throw new Error(`Failed to create dataset table: ${ctErr.message}`)
 
     datasetId = dataset.id
 

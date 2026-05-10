@@ -6,6 +6,7 @@ import { adminClient } from "@/lib/supabase/admin"
 import { buildChatSystemPrompt } from "@/lib/ai/prompts/chat"
 import { validateKpiSql } from "@/lib/sql/validator"
 import { maybeCompact } from "@/lib/ai/compaction"
+import { isActive } from "@/lib/billing"
 import type { ColumnMetadata } from "@/lib/types"
 
 // ── Model routing ────────────────────────────────────────────────────────────
@@ -130,8 +131,18 @@ export async function POST(request: Request) {
   }
 
   const { workspace_id, messages } = body
-  if (!workspace_id || !messages?.length) {
+  if (!workspace_id) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 })
+  }
+  if (!Array.isArray(messages) || messages.length > 50) {
+    return NextResponse.json({ error: "messages must be an array of at most 50 items" }, { status: 400 })
+  }
+  for (const msg of messages) {
+    if ((msg.role !== "user" && msg.role !== "assistant") ||
+        typeof msg.content !== "string" ||
+        (msg.content as string).length > 20000) {
+      return NextResponse.json({ error: "Invalid message entry" }, { status: 400 })
+    }
   }
 
   const { data: membership } = await supabase
@@ -141,13 +152,16 @@ export async function POST(request: Request) {
 
   const [{ data: workspace }, { data: datasets }] = await Promise.all([
     adminClient.from("workspaces")
-      .select("name, industry, primary_currency, schema_name")
+      .select("name, industry, primary_currency, schema_name, subscription_status, trial_ends_at")
       .eq("id", workspace_id).maybeSingle(),
     adminClient.from("datasets")
       .select("id, name, table_name, ai_description, column_metadata")
       .eq("workspace_id", workspace_id),
   ])
   if (!workspace) return NextResponse.json({ error: "Workspace not found" }, { status: 404 })
+  if (!isActive(workspace.subscription_status, workspace.trial_ends_at)) {
+    return NextResponse.json({ error: "Subscription required" }, { status: 402 })
+  }
 
   const systemPrompt = buildChatSystemPrompt({
     workspaceName: workspace.name,

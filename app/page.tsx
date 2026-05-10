@@ -439,7 +439,7 @@ export default function LandingPage() {
               <a key={l} href="#" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>{l}</a>
             ))}
           </div>
-          <p style={{ fontSize: "13px", color: "#1e293b", margin: 0 }}>© 2025 BizIntel. All rights reserved.</p>
+          <p style={{ fontSize: "13px", color: "#94a3b8", margin: 0 }}>© 2025 BizIntel. All rights reserved.</p>
         </div>
       </footer>
     </div>
