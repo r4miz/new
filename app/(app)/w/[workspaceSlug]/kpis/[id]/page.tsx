@@ -33,7 +33,7 @@ export default async function KpiDetailPage({
   return (
     <div style={{ minHeight: "100%", background: "#060d1a" }}>
       <div style={{ background: "#0b1629", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "20px 28px" }}>
-        <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <Link
             href={`/w/${workspaceSlug}/dashboard`}
             style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "#64748b", textDecoration: "none", transition: "color 0.12s" }}
@@ -43,8 +43,8 @@ export default async function KpiDetailPage({
           </Link>
         </div>
       </div>
-      <div style={{ padding: "24px 28px" }}>
-        <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+      <div style={{ padding: "28px 28px" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <KpiDetail kpi={kpi as KpiProposal} />
         </div>
       </div>
