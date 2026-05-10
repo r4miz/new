@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import type { KpiProposal } from "@/lib/types"
-import { TrendingUp, TrendingDown, BarChart2, Hash, AlertCircle, ChevronDown, ChevronUp } from "lucide-react"
+import { TrendingUp, TrendingDown, BarChart2, Hash, AlertCircle } from "lucide-react"
 import {
   ResponsiveContainer,
   AreaChart,
@@ -39,12 +39,6 @@ function fmt(v: unknown): string {
   return n % 1 === 0 ? n.toLocaleString() : n.toFixed(2)
 }
 
-function fmtFull(v: unknown): string {
-  if (v === null || v === undefined) return "—"
-  const n = Number(v)
-  if (isNaN(n)) return String(v)
-  return n % 1 === 0 ? n.toLocaleString() : n.toFixed(4)
-}
 
 function shortenLabel(v: unknown): string {
   const s = String(v ?? "")
@@ -75,8 +69,6 @@ export function KpiDetail({ kpi }: Props) {
   const [rows, setRows] = useState<QueryRow[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [sqlOpen, setSqlOpen] = useState(false)
-
   const accent = ACCENT[kpi.chart_type] ?? ACCENT.line
 
   const fetchData = useCallback(async () => {
@@ -248,69 +240,8 @@ export function KpiDetail({ kpi }: Props) {
             </div>
           )}
 
-          {/* Data table */}
-          {rows.length > 0 && (
-            <div style={{ ...card, overflow: "hidden" }}>
-              <div style={{ padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                <p style={{ margin: 0, fontSize: "13px", fontWeight: 600, color: "#94a3b8" }}>
-                  Raw data <span style={{ fontWeight: 400, color: "#334155" }}>· {rows.length} rows</span>
-                </p>
-              </div>
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", fontSize: "13px", borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ background: "#080c14" }}>
-                      {cols.map((c) => (
-                        <th key={c} style={{ textAlign: "left", padding: "10px 20px", fontSize: "11px", fontWeight: 700, color: "#334155", textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>
-                          {c.replace(/_/g, " ")}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.slice(0, 100).map((row, i) => (
-                      <tr key={i} style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-                        {cols.map((c) => (
-                          <td key={c} style={{ padding: "10px 20px", color: "#94a3b8", whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
-                            {typeof row[c] === "number" ? fmtFull(row[c]) : String(row[c] ?? "—")}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {rows.length > 100 && (
-                <div style={{ padding: "12px 20px", borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: "12px", color: "#334155" }}>
-                  Showing first 100 of {rows.length} rows
-                </div>
-              )}
-            </div>
-          )}
         </>
       )}
-
-      {/* SQL accordion */}
-      <div style={{ ...card, overflow: "hidden" }}>
-        <button
-          onClick={() => setSqlOpen((o) => !o)}
-          style={{
-            width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "14px 20px", fontSize: "13px", fontWeight: 600, color: "#475569",
-            background: "none", border: "none", cursor: "pointer", transition: "color 0.12s",
-          }}
-        >
-          <span>SQL query</span>
-          {sqlOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-        </button>
-        {sqlOpen && (
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-            <pre style={{ margin: 0, background: "#07090e", color: "#7dd3fc", fontSize: "12px", padding: "20px", overflowX: "auto", lineHeight: 1.65, fontFamily: "monospace", whiteSpace: "pre-wrap" }}>
-              {kpi.proposed_sql}
-            </pre>
-          </div>
-        )}
-      </div>
     </div>
   )
 }

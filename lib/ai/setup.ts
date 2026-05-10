@@ -90,8 +90,9 @@ export async function setupDatasetAI(datasetId: string, workspaceId: string): Pr
         columns: updatedColumns,
         industry: workspace.industry,
         currency: workspace.primary_currency,
+        existingKpiNames: [],
       }),
-      { model: "claude-sonnet-4-6", endpoint: "propose-kpis", workspaceId, maxTokens: 4096 }
+      { model: "claude-sonnet-4-6", endpoint: "propose-kpis", workspaceId, maxTokens: 8192 }
     )
     proposed = JSON.parse(proposeRaw)
     if (!Array.isArray(proposed)) proposed = [proposed]
