@@ -1,10 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk"
 import { adminClient } from "@/lib/supabase/admin"
 
-if (!process.env.ANTHROPIC_API_KEY) {
-  throw new Error("ANTHROPIC_API_KEY is not configured")
-}
-
 export const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 // Pricing per 1M tokens (USD)
