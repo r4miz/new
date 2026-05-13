@@ -68,13 +68,7 @@ export default function OnboardingPage() {
           <span style={{ fontWeight: 800, fontSize: "18px", color: "#0f172a", letterSpacing: "-0.4px" }}>BizIntel</span>
         </div>
 
-        <div style={{ textAlign: "center", marginBottom: "24px" }}>
-          <span style={{ display: "inline-block", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "20px", padding: "5px 14px", fontSize: "12.5px", color: "#15803d", fontWeight: 600 }}>
-            ✓ Your 7-day free trial has started
-          </span>
-        </div>
-
-        <div style={{ background: "white", borderRadius: "14px", border: "1px solid #e5e7eb", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", padding: "40px" }}>
+<div style={{ background: "white", borderRadius: "14px", border: "1px solid #e5e7eb", boxShadow: "0 4px 24px rgba(0,0,0,0.07)", padding: "40px" }}>
           <p style={{ fontSize: "12px", color: "#6b7280", margin: "0 0 16px", fontWeight: 500 }}>
             Step 2 of 3 — Workspace setup
           </p>

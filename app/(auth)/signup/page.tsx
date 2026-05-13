@@ -31,7 +31,7 @@ export default function SignupPage() {
         Create your account
       </h1>
       <p style={{ fontSize: "14px", color: "#64748b", margin: "0 0 36px" }}>
-        Start your 7-day free trial — no credit card required.
+        Analyze your business data with AI in minutes.
       </p>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
