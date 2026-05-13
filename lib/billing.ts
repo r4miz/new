@@ -2,8 +2,8 @@ export const PLANS = {
   pro: {
     name: "Pro",
     description: "Everything you need to run a data-driven business.",
-    monthly: { price: 10,  priceEnvKey: "STRIPE_PRO_MONTHLY_PRICE_ID" },
-    yearly:  { price: 90,  priceEnvKey: "STRIPE_PRO_YEARLY_PRICE_ID", perMonth: 7.50, saving: 30 },
+    monthly: { price: 49,  priceEnvKey: "STRIPE_PRO_MONTHLY_PRICE_ID" },
+    yearly:  { price: 468, priceEnvKey: "STRIPE_PRO_YEARLY_PRICE_ID", perMonth: 39, saving: 120 },
     features: [
       "Unlimited datasets & KPIs",
       "AI-generated KPI dashboard",

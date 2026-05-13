@@ -52,7 +52,7 @@ export function PricingCards({ workspaceId, currentPlan }: Props) {
               {p === "yearly" ? "Yearly" : "Monthly"}
               {p === "yearly" && (
                 <span style={{ fontSize: "10.5px", fontWeight: 700, padding: "2px 7px", borderRadius: "5px", background: "rgba(16,185,129,0.15)", color: T.green }}>
-                  Save 25%
+                  Save 20%
                 </span>
               )}
             </button>

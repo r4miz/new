@@ -146,7 +146,7 @@ export default function LandingPage() {
           </div>
 
           <p style={{ fontSize: "13px", color: "#475569", marginTop: "20px" }}>
-            $10/mo or $90/yr · Cancel anytime · All major cards
+            $49/mo or $468/yr · Cancel anytime · All major cards
           </p>
 
           {/* Mock dashboard preview */}
@@ -333,7 +333,7 @@ export default function LandingPage() {
               One plan. Everything included.
             </h2>
             <p style={{ fontSize: "16px", color: GRAY, margin: 0 }}>
-              $10/mo or $90/yr. Cancel anytime.
+              $49/mo or $468/yr. Cancel anytime.
             </p>
           </div>
 
@@ -347,11 +347,11 @@ export default function LandingPage() {
 
               <div style={{ marginBottom: "8px" }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-                  <span style={{ fontSize: "64px", fontWeight: 900, color: "#f8fafc", letterSpacing: "-2px", lineHeight: 1 }}>$10</span>
+                  <span style={{ fontSize: "64px", fontWeight: 900, color: "#f8fafc", letterSpacing: "-2px", lineHeight: 1 }}>$49</span>
                   <span style={{ fontSize: "16px", color: "#64748b", marginBottom: "8px" }}>/mo</span>
                 </div>
                 <p style={{ margin: "6px 0 0", fontSize: "13px", color: "#475569" }}>
-                  or <strong style={{ color: TEAL }}>$90/yr</strong> — save $30 (2 months free)
+                  or <strong style={{ color: TEAL }}>$468/yr</strong> — save $120 (2 months free)
                 </p>
               </div>
 
@@ -381,7 +381,7 @@ export default function LandingPage() {
               {[
                 { emoji: "🚀", title: "Up and running in 60 seconds", body: "Upload a CSV or connect an integration. AI builds your full KPI dashboard automatically — no setup, no SQL, no data team." },
                 { emoji: "🧠", title: "A consultant in your pocket", body: "The AI advisor knows your actual numbers and your industry. Ask anything, get answers a consultant would charge thousands for." },
-                { emoji: "💳", title: "Less than your Netflix subscription", body: "Most BI tools start at $200–$500/mo. BizIntel gives you the same power for $10. No annual lock-in required." },
+                { emoji: "⏱️", title: "Replaces hours of manual work every week", body: "Stop exporting data, rebuilding pivot tables, and guessing. BizIntel gives you live answers from your real numbers — no analyst, no Excel expertise, no spreadsheet archaeology." },
               ].map(({ emoji, title, body }) => (
                 <div key={title} style={{ display: "flex", gap: "16px" }}>
                   <div style={{ fontSize: "24px", lineHeight: 1, flexShrink: 0, marginTop: "2px" }}>{emoji}</div>
@@ -420,7 +420,7 @@ export default function LandingPage() {
             <ArrowRight size={17} />
           </Link>
           <p style={{ fontSize: "13px", color: "#334155", marginTop: "16px" }}>
-            $10/mo or $90/yr · Cancel anytime · All major cards
+            $49/mo or $468/yr · Cancel anytime · All major cards
           </p>
         </div>
       </section>
