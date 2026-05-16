@@ -20,7 +20,7 @@ export function estimateTokens(messages: Anthropic.MessageParam[]): number {
 // Compact older messages into a structured summary using Haiku (cheap).
 // Keeps the last KEEP_RECENT messages verbatim for fresh context.
 const KEEP_RECENT     = 4   // messages to preserve verbatim
-const COMPACT_TRIGGER = 3000 // estimated tokens before compacting
+const COMPACT_TRIGGER = 1500 // estimated tokens before compacting
 
 export async function maybeCompact(
   messages: Anthropic.MessageParam[]

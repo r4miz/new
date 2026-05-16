@@ -20,7 +20,7 @@ export function buildChatSystemPrompt(params: ChatPromptParams): string {
   const hasData  = params.datasets.length > 0
 
   const dataSection = hasData
-    ? `\n## Client data (query with query_data tool)\n\n${params.datasets.map(d => `### "${d.name}"\nSQL: "${d.schemaName}"."${d.tableName}"\n${d.aiDescription ? `About: ${d.aiDescription}\n` : ""}Columns:\n${d.columns.map(c => `  - ${c.name} (${c.sql_type})${c.ai_inferred_type ? ` — ${c.ai_inferred_type}` : ""}`).join("\n")}`).join("\n\n")}\n\nSQL rules: SELECT only · always double-quote schema and table names · LIMIT results appropriately.`
+    ? `\n## Client data (query with query_data tool)\n\n${params.datasets.map(d => `### "${d.name}"\nSQL: "${d.schemaName}"."${d.tableName}"\n${d.aiDescription ? `About: ${d.aiDescription}\n` : ""}Columns: ${d.columns.map(c => `"${c.name}"(${c.sql_type})`).join(", ")}`).join("\n\n")}\n\nSQL rules: SELECT only · double-quote schema and table names · LIMIT results.`
     : "\n## Client data\nNo data uploaded yet. Provide strategic and industry advice only."
 
   // NOTE: This prompt is KV-cached — keep it stable. No timestamps or dynamic IDs.

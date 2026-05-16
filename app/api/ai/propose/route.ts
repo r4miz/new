@@ -70,7 +70,7 @@ export async function POST(request: Request) {
           currency: workspace.primary_currency,
           existingKpiNames: (existingKpis ?? []).map((k: { name: string }) => k.name),
         }),
-        { model: "claude-sonnet-4-6", endpoint: "propose-kpis", workspaceId: workspace_id, maxTokens: 8192 }
+        { model: "claude-haiku-4-5-20251001", endpoint: "propose-kpis", workspaceId: workspace_id, maxTokens: 4096 }
       )
     } catch (e) {
       return NextResponse.json({ error: `[propose-claude] ${e}` }, { status: 500 })
@@ -92,7 +92,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ kpis: [] })
   }
 
-  const rows = unique.map((p) => ({
+  // Validate each KPI's SQL against the real database before inserting.
+  // KPIs that reference non-existent columns are silently dropped — customers
+  // never see a broken tile.
+  const validationResults = await Promise.allSettled(
+    unique.map(kpi => adminClient.rpc("run_kpi_query", { p_sql: kpi.proposed_sql }))
+  )
+  const validated = unique.filter((_, i) => {
+    const r = validationResults[i]
+    return r.status === "fulfilled" && !r.value.error
+  })
+
+  if (validated.length === 0) {
+    return NextResponse.json({ kpis: [] })
+  }
+
+  const rows = validated.map((p) => ({
     workspace_id,
     dataset_id,
     name: p.name,

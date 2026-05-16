@@ -200,10 +200,10 @@ export async function POST(request: Request) {
       // Sliding window compaction — keeps context lean on long conversations
       let history = await maybeCompact(messages)
 
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < 4; i++) {
         const stream = anthropic.messages.stream({
           model,
-          max_tokens: 2048,
+          max_tokens: 1200,
           system:     systemBlock,
           tools:      TOOLS,
           messages:   history,
