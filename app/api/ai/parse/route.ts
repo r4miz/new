@@ -88,7 +88,8 @@ export async function POST(request: Request) {
     }
 
     try {
-      aiResult = JSON.parse(rawResponse)
+      const cleaned = rawResponse.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim()
+      aiResult = JSON.parse(cleaned)
     } catch {
       return NextResponse.json({ error: `[parse-json] raw=${rawResponse.slice(0, 200)}` }, { status: 500 })
     }
