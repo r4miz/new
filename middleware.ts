@@ -43,8 +43,13 @@ export async function middleware(request: NextRequest) {
 
   // Redirect authenticated users away from auth pages
   if (user && (path === "/login" || path === "/signup")) {
+    const { data: ws } = await supabase
+      .from("workspaces")
+      .select("slug")
+      .limit(1)
+      .maybeSingle()
     const url = request.nextUrl.clone()
-    url.pathname = "/onboarding"
+    url.pathname = ws ? `/w/${ws.slug}/dashboard` : "/onboarding"
     return NextResponse.redirect(url)
   }
 
