@@ -2,7 +2,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { getWorkspaceBySlug, getWorkspaceMembership } from "@/lib/db/workspaces"
 import { UpgradeGate } from "@/components/billing/UpgradeGate"
-import { Sidebar } from "@/components/layout/Sidebar"
+import { AppShell } from "@/components/layout/AppShell"
 
 export default async function WorkspaceLayout({
   children,
@@ -27,18 +27,14 @@ export default async function WorkspaceLayout({
   const isExpired = status !== "active"
 
   return (
-    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#060d1a" }}>
-      <Sidebar workspace={workspace} subscriptionStatus={status} />
-
-      <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0, overflowY: "auto" }}>
-        {isExpired ? (
-          <UpgradeGate workspace={{ id: workspace.id, name: workspace.name }}>
-            {children}
-          </UpgradeGate>
-        ) : (
-          children
-        )}
-      </main>
-    </div>
+    <AppShell workspace={workspace} subscriptionStatus={status}>
+      {isExpired ? (
+        <UpgradeGate workspace={{ id: workspace.id, name: workspace.name }}>
+          {children}
+        </UpgradeGate>
+      ) : (
+        children
+      )}
+    </AppShell>
   )
 }

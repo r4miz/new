@@ -116,3 +116,115 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — base declarations (mobile overrides below in @media)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Sidebar overlay (shared by app shell + chat) ──────────────────────── */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 199;
+  background: rgba(0, 0, 0, 0.55);
+}
+.sidebar-overlay.open { display: block; }
+
+/* ── App shell sidebar wrapper ─────────────────────────────────────────── */
+.app-sidebar-wrapper { flex-shrink: 0; }
+
+/* ── Mobile top bar (hidden on desktop) ────────────────────────────────── */
+.mobile-header {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.mobile-hamburger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-sec);
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+.mobile-hamburger:hover { background: rgba(255,255,255,0.06); }
+
+/* ── Landing page nav ──────────────────────────────────────────────────── */
+.landing-hamburger { display: none; }
+
+/* ── Chat interface ────────────────────────────────────────────────────── */
+.chat-messages-inner { max-width: 760px; margin: 0 auto; padding: 0 32px; }
+.chat-suggest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 560px; }
+
+/* ── Dashboard ──────────────────────────────────────────────────────────── */
+.dash-header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   @media (max-width: 767px) — mobile overrides
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  /* App sidebar becomes a fixed overlay drawer */
+  .app-sidebar-wrapper {
+    position: fixed !important;
+    left: -240px;
+    top: 0;
+    bottom: 0;
+    z-index: 200;
+    transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 232px;
+    height: 100%;
+  }
+  .app-sidebar-wrapper.mobile-open { left: 0; }
+
+  /* Show mobile top bar */
+  .mobile-header { display: flex; }
+
+  /* Landing nav: hide links/auth, show hamburger */
+  .landing-nav-inner { padding: 0 20px !important; }
+  .landing-nav-links { display: none !important; }
+  .landing-nav-auth  { display: none !important; }
+  .landing-hamburger { display: flex !important; }
+
+  /* Landing sections: compress padding */
+  .landing-section { padding-left: 20px !important; padding-right: 20px !important; padding-top: 60px !important; padding-bottom: 60px !important; }
+  .landing-hero-stats { grid-template-columns: 1fr !important; }
+  .landing-pricing-grid { grid-template-columns: 1fr !important; }
+  .landing-footer-inner { flex-direction: column !important; align-items: flex-start !important; }
+  .landing-strip-inner { flex-direction: column !important; gap: 16px !important; align-items: flex-start !important; padding: 20px !important; }
+
+  /* Chat interface */
+  .chat-messages-inner { padding: 0 16px !important; }
+  .chat-suggest-grid { grid-template-columns: 1fr !important; }
+  .chat-input-bar { padding: 12px 16px 16px !important; }
+  .chat-topbar { padding: 0 12px !important; }
+
+  /* Dashboard */
+  .dash-header-content { flex-direction: column !important; align-items: flex-start !important; }
+  .dash-header-pad { padding: 16px !important; }
+  .dash-body-pad { padding: 16px !important; }
+
+  /* Upload page */
+  .upload-layout { flex-direction: column !important; padding: 16px !important; }
+  .upload-layout > *:last-child { width: 100% !important; }
+
+  /* Generic inner page header padding */
+  .page-header-pad { padding: 16px !important; }
+}

@@ -4,6 +4,7 @@ import {
   TrendingUp, MessageSquare, Zap, ShoppingBag,
   Database, CreditCard,
 } from "lucide-react"
+import { LandingNav } from "@/components/landing/LandingNav"
 
 // ── Design tokens ────────────────────────────────────────────────────────────
 const NAVY   = "#0f172a"
@@ -50,41 +51,7 @@ export default function LandingPage() {
     <div style={{ fontFamily: "var(--font-geist-sans), system-ui, sans-serif", color: NAVY, overflowX: "hidden" }}>
 
       {/* ── Nav ─────────────────────────────────────────────────────────────── */}
-      <nav style={{
-        position: "sticky", top: 0, zIndex: 50,
-        background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)",
-        borderBottom: `1px solid ${BORDER}`,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 48px", height: "64px",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{ width: "30px", height: "30px", background: TEAL, borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <BarChart2 size={15} color="white" />
-          </div>
-          <span style={{ fontWeight: 800, fontSize: "16px", letterSpacing: "-0.3px" }}>BizIntel</span>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
-          {["Features", "Integrations", "Pricing"].map(l => (
-            <a key={l} href={`#${l.toLowerCase()}`} style={{ fontSize: "14px", fontWeight: 500, color: GRAY, textDecoration: "none" }}>{l}</a>
-          ))}
-        </div>
-
-        <div style={{ display: "flex", gap: "10px" }}>
-          <Link href="/login" style={{
-            padding: "8px 18px", borderRadius: "7px", fontSize: "14px", fontWeight: 600,
-            border: `1.5px solid ${BORDER}`, color: NAVY, textDecoration: "none", background: "white",
-          }}>
-            Log in
-          </Link>
-          <Link href="/signup" style={{
-            padding: "8px 18px", borderRadius: "7px", fontSize: "14px", fontWeight: 600,
-            background: NAVY, color: "white", textDecoration: "none",
-          }}>
-            Get started →
-          </Link>
-        </div>
-      </nav>
+      <LandingNav />
 
       {/* ── Hero ────────────────────────────────────────────────────────────── */}
       <section style={{
@@ -101,7 +68,7 @@ export default function LandingPage() {
         {/* Glow */}
         <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translateX(-50%)", width: "600px", height: "300px", background: `radial-gradient(ellipse, ${TEAL}22 0%, transparent 70%)`, pointerEvents: "none" }} />
 
-        <div style={{ position: "relative", maxWidth: "760px" }}>
+        <div style={{ position: "relative", maxWidth: "760px", width: "100%" }}>
           <div style={{
             display: "inline-flex", alignItems: "center", gap: "6px",
             background: "rgba(14,165,233,0.12)", border: "1px solid rgba(14,165,233,0.3)",
@@ -113,14 +80,14 @@ export default function LandingPage() {
           </div>
 
           <h1 style={{
-            fontSize: "clamp(40px, 6vw, 68px)", fontWeight: 900, color: "#f8fafc",
+            fontSize: "clamp(36px, 6vw, 68px)", fontWeight: 900, color: "#f8fafc",
             lineHeight: 1.1, letterSpacing: "-2px", margin: "0 0 24px",
           }}>
             Every business deserves<br />
             <span style={{ color: TEAL }}>a data analyst.</span>
           </h1>
 
-          <p style={{ fontSize: "18px", color: "#94a3b8", lineHeight: 1.7, margin: "0 auto 40px", maxWidth: "560px" }}>
+          <p style={{ fontSize: "clamp(15px, 2vw, 18px)", color: "#94a3b8", lineHeight: 1.7, margin: "0 auto 40px", maxWidth: "560px" }}>
             Connect your data, get an AI-generated KPI dashboard in under 60 seconds,
             and ask your industry-expert AI advisor anything — no SQL, no consultants, no guesswork.
           </p>
@@ -158,7 +125,10 @@ export default function LandingPage() {
             padding: "24px",
             backdropFilter: "blur(4px)",
           }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "12px" }}>
+            <div
+              className="landing-hero-stats"
+              style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "12px" }}
+            >
               {[
                 { label: "TOTAL REVENUE",        value: "$284.5K", trend: "+12.4%", color: TEAL     },
                 { label: "NET PROFIT",            value: "$91.2K",  trend: "+8.1%",  color: "#10b981" },
@@ -185,10 +155,10 @@ export default function LandingPage() {
               background: "rgba(255,255,255,0.03)", borderRadius: "8px", padding: "12px 16px",
               border: "1px solid rgba(255,255,255,0.05)",
             }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#4ade80" }} />
-                <span style={{ fontSize: "12px", color: "#64748b" }}>AI Advisor:</span>
-                <span style={{ fontSize: "12px", color: "#94a3b8", fontStyle: "italic" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "8px", flexWrap: "wrap" }}>
+                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#4ade80", marginTop: "5px", flexShrink: 0 }} />
+                <span style={{ fontSize: "12px", color: "#64748b", flexShrink: 0 }}>AI Advisor:</span>
+                <span style={{ fontSize: "12px", color: "#94a3b8", fontStyle: "italic", textAlign: "left" }}>
                   &ldquo;Your Q2 revenue is up 12.4% — outpacing the industry average of 7.2%. Focus on retaining your top 3 clients who drive 68% of revenue.&rdquo;
                 </span>
               </div>
@@ -198,8 +168,11 @@ export default function LandingPage() {
       </section>
 
       {/* ── Social proof strip ───────────────────────────────────────────────── */}
-      <section style={{ background: "#f8fafc", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`, padding: "20px 48px" }}>
-        <div style={{ maxWidth: "900px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", gap: "40px", flexWrap: "wrap" }}>
+      <section style={{ background: "#f8fafc", borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}` }}>
+        <div
+          className="landing-strip-inner"
+          style={{ maxWidth: "900px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center", gap: "40px", flexWrap: "wrap", padding: "20px 48px" }}
+        >
           <p style={{ fontSize: "13px", color: "#9ca3af", fontWeight: 500, margin: 0 }}>Works with your existing tools</p>
           {INTEGRATIONS.map(i => (
             <div key={i.name} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -211,13 +184,13 @@ export default function LandingPage() {
       </section>
 
       {/* ── Features ─────────────────────────────────────────────────────────── */}
-      <section id="features" style={{ background: "white", padding: "100px 48px" }}>
+      <section id="features" className="landing-section" style={{ background: "white", padding: "100px 48px" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "64px" }}>
             <p style={{ fontSize: "12px", fontWeight: 700, color: TEAL, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "12px" }}>
               Everything you need
             </p>
-            <h2 style={{ fontSize: "40px", fontWeight: 900, color: NAVY, margin: "0 0 16px", letterSpacing: "-1px" }}>
+            <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 900, color: NAVY, margin: "0 0 16px", letterSpacing: "-1px" }}>
               The analytics stack your business deserves
             </h2>
             <p style={{ fontSize: "17px", color: GRAY, maxWidth: "520px", margin: "0 auto", lineHeight: 1.65 }}>
@@ -225,12 +198,11 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
             {FEATURES.map(({ icon: Icon, color, title, desc }) => (
               <div key={title} style={{
                 border: `1px solid ${BORDER}`, borderRadius: "14px", padding: "32px",
                 boxShadow: "0 1px 4px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04)",
-                transition: "transform 0.18s, box-shadow 0.18s",
               }}>
                 <div style={{
                   width: "44px", height: "44px", borderRadius: "10px", background: color + "15",
@@ -249,16 +221,16 @@ export default function LandingPage() {
       </section>
 
       {/* ── How it works ─────────────────────────────────────────────────────── */}
-      <section style={{ background: "#f8fafc", padding: "100px 48px", borderTop: `1px solid ${BORDER}` }}>
+      <section className="landing-section" style={{ background: "#f8fafc", padding: "100px 48px", borderTop: `1px solid ${BORDER}` }}>
         <div style={{ maxWidth: "900px", margin: "0 auto", textAlign: "center" }}>
           <p style={{ fontSize: "12px", fontWeight: 700, color: TEAL, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "12px" }}>
             Dead simple
           </p>
-          <h2 style={{ fontSize: "40px", fontWeight: 900, color: NAVY, margin: "0 0 64px", letterSpacing: "-1px" }}>
+          <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 900, color: NAVY, margin: "0 0 64px", letterSpacing: "-1px" }}>
             Up and running in 3 steps
           </h2>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "12px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
             {STEPS.map(({ n, title, desc }) => (
               <div key={n} style={{
                 background: "white", border: `1px solid ${BORDER}`, borderRadius: "14px", padding: "32px 28px",
@@ -282,19 +254,19 @@ export default function LandingPage() {
       </section>
 
       {/* ── Integrations ─────────────────────────────────────────────────────── */}
-      <section id="integrations" style={{ background: "white", padding: "100px 48px", borderTop: `1px solid ${BORDER}` }}>
+      <section id="integrations" className="landing-section" style={{ background: "white", padding: "100px 48px", borderTop: `1px solid ${BORDER}` }}>
         <div style={{ maxWidth: "900px", margin: "0 auto", textAlign: "center" }}>
           <p style={{ fontSize: "12px", fontWeight: 700, color: TEAL, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "12px" }}>
             Plug &amp; play
           </p>
-          <h2 style={{ fontSize: "40px", fontWeight: 900, color: NAVY, margin: "0 0 16px", letterSpacing: "-1px" }}>
+          <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 900, color: NAVY, margin: "0 0 16px", letterSpacing: "-1px" }}>
             Connects to the tools you already use
           </h2>
           <p style={{ fontSize: "16px", color: GRAY, margin: "0 0 56px", lineHeight: 1.65 }}>
             No engineers needed. Connect in seconds, sync automatically every day.
           </p>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "14px" }}>
             {[
               { name: "Shopify",       icon: ShoppingBag, color: "#96bf48", desc: "Orders & revenue"      },
               { name: "HubSpot",       icon: TrendingUp,  color: "#ff7a59", desc: "Deals & pipeline"      },
@@ -323,13 +295,13 @@ export default function LandingPage() {
       </section>
 
       {/* ── Pricing ──────────────────────────────────────────────────────────── */}
-      <section id="pricing" style={{ background: "#f8fafc", padding: "100px 48px", borderTop: `1px solid ${BORDER}` }}>
+      <section id="pricing" className="landing-section" style={{ background: "#f8fafc", padding: "100px 48px", borderTop: `1px solid ${BORDER}` }}>
         <div style={{ maxWidth: "860px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "56px" }}>
             <p style={{ fontSize: "12px", fontWeight: 700, color: TEAL, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "12px" }}>
               Simple pricing
             </p>
-            <h2 style={{ fontSize: "40px", fontWeight: 900, color: NAVY, margin: "0 0 16px", letterSpacing: "-1px" }}>
+            <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 900, color: NAVY, margin: "0 0 16px", letterSpacing: "-1px" }}>
               One plan. Everything included.
             </h2>
             <p style={{ fontSize: "16px", color: GRAY, margin: 0 }}>
@@ -338,8 +310,10 @@ export default function LandingPage() {
           </div>
 
           {/* Two-column: price card + value props */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px", alignItems: "center" }}>
-
+          <div
+            className="landing-pricing-grid"
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px", alignItems: "center" }}
+          >
             {/* Price card */}
             <div style={{ background: NAVY, borderRadius: "20px", padding: "40px", boxShadow: "0 16px 48px rgba(15,23,42,0.25)" }}>
               <p style={{ margin: "0 0 4px", fontSize: "13px", fontWeight: 700, color: TEAL, letterSpacing: "0.05em" }}>BizIntel Pro</p>
@@ -400,11 +374,9 @@ export default function LandingPage() {
       </section>
 
       {/* ── Final CTA ────────────────────────────────────────────────────────── */}
-      <section style={{
-        background: NAVY, padding: "100px 48px", textAlign: "center",
-      }}>
+      <section className="landing-section" style={{ background: NAVY, padding: "100px 48px", textAlign: "center" }}>
         <div style={{ maxWidth: "600px", margin: "0 auto" }}>
-          <h2 style={{ fontSize: "42px", fontWeight: 900, color: "#f8fafc", margin: "0 0 16px", letterSpacing: "-1px" }}>
+          <h2 style={{ fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 900, color: "#f8fafc", margin: "0 0 16px", letterSpacing: "-1px" }}>
             Start knowing your numbers.
           </h2>
           <p style={{ fontSize: "17px", color: "#64748b", margin: "0 0 40px", lineHeight: 1.65 }}>
@@ -427,14 +399,17 @@ export default function LandingPage() {
 
       {/* ── Footer ───────────────────────────────────────────────────────────── */}
       <footer style={{ background: "#020617", borderTop: "1px solid #0f172a", padding: "40px 48px" }}>
-        <div style={{ maxWidth: "1100px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
+        <div
+          className="landing-footer-inner"
+          style={{ maxWidth: "1100px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <div style={{ width: "26px", height: "26px", background: TEAL, borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <BarChart2 size={13} color="white" />
             </div>
             <span style={{ fontWeight: 800, fontSize: "14px", color: "#f8fafc" }}>BizIntel</span>
           </div>
-          <div style={{ display: "flex", gap: "28px" }}>
+          <div style={{ display: "flex", gap: "28px", flexWrap: "wrap" }}>
             {["Features", "Integrations", "Pricing"].map(l => (
               <a key={l} href={`#${l.toLowerCase()}`} style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>{l}</a>
             ))}

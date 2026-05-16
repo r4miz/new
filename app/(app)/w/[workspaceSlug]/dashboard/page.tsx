@@ -38,11 +38,11 @@ export default async function DashboardPage({
     <div style={{ minHeight: "100%", background: T.bg, display: "flex", flexDirection: "column" }}>
 
       {/* Header */}
-      <div style={{
+      <div className="dash-header-pad" style={{
         background: T.surface, borderBottom: `1px solid ${T.border}`,
         padding: "20px 28px", flexShrink: 0,
       }}>
-        <div style={{ maxWidth: "1400px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "24px" }}>
+        <div className="dash-header-content">
 
           {/* Title + stats */}
           <div style={{ display: "flex", alignItems: "center", gap: "24px", flexWrap: "wrap" }}>
@@ -92,7 +92,7 @@ export default async function DashboardPage({
       </div>
 
       {/* KPI grid */}
-      <div style={{ flex: 1, padding: "24px 28px" }}>
+      <div className="dash-body-pad" style={{ flex: 1, padding: "24px 28px" }}>
         <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           {kpis.length === 0 ? (
             <EmptyDashboard workspaceSlug={workspaceSlug} />

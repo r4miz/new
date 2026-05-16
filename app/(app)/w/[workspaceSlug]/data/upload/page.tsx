@@ -60,7 +60,7 @@ export default async function UploadPage({
       </div>
 
       {/* Two-column body */}
-      <div style={{ flex: 1, padding: "32px 28px", display: "flex", alignItems: "flex-start", gap: "28px", maxWidth: "1100px", width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
+      <div className="upload-layout" style={{ flex: 1, padding: "32px 28px", display: "flex", alignItems: "flex-start", gap: "28px", maxWidth: "1100px", width: "100%", margin: "0 auto", boxSizing: "border-box" }}>
 
         {/* Left: upload form */}
         <div style={{ flex: "1 1 0", minWidth: 0 }}>

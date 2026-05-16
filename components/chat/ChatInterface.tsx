@@ -179,8 +179,20 @@ export function ChatInterface({ workspace, datasets, userId, initialSessions }: 
   const [messages,       setMessages]       = useState<Message[]>([])
   const [input,          setInput]          = useState("")
   const [isLoading,      setIsLoading]      = useState(false)
-  const [sidebarOpen,    setSidebarOpen]    = useState(true)
+  const [sidebarOpen,    setSidebarOpen]    = useState(false)
+  const [isMobile,       setIsMobile]       = useState(false)
   const [loadingSession, setLoadingSession] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)")
+    const update = (e: MediaQueryList | MediaQueryListEvent) => {
+      setIsMobile(e.matches)
+      if (!e.matches) setSidebarOpen(true)
+    }
+    update(mq)
+    mq.addEventListener("change", update)
+    return () => mq.removeEventListener("change", update)
+  }, [])
 
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef  = useRef<HTMLTextAreaElement>(null)
@@ -341,17 +353,34 @@ export function ChatInterface({ workspace, datasets, userId, initialSessions }: 
         .suggest-btn:hover svg { color: #0ea5e9 !important; }
       `}</style>
 
-      <div style={{ display: "flex", width: "100%", height: "100%", overflow: "hidden", background: T.bg }}>
+      <div style={{ display: "flex", width: "100%", height: "100%", overflow: "hidden", background: T.bg, position: "relative" }}>
+
+        {/* Mobile overlay for chat history panel */}
+        {isMobile && sidebarOpen && (
+          <div
+            style={{ position: "absolute", inset: 0, zIndex: 99, background: "rgba(0,0,0,0.5)" }}
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
         {/* ── Sidebar ──────────────────────────────────────────────────────── */}
         <div style={{
-          width: sidebarOpen ? `${SIDEBAR_W}px` : "0px",
-          minWidth: sidebarOpen ? `${SIDEBAR_W}px` : "0px",
+          width: isMobile ? `${SIDEBAR_W}px` : (sidebarOpen ? `${SIDEBAR_W}px` : "0px"),
+          minWidth: isMobile ? `${SIDEBAR_W}px` : (sidebarOpen ? `${SIDEBAR_W}px` : "0px"),
           background: T.surface,
           borderRight: `1px solid ${T.border}`,
           display: "flex", flexDirection: "column",
           overflow: "hidden",
-          transition: "width 0.22s cubic-bezier(0.4,0,0.2,1), min-width 0.22s cubic-bezier(0.4,0,0.2,1)",
+          ...(isMobile ? {
+            position: "absolute",
+            top: 0, bottom: 0,
+            left: sidebarOpen ? "0" : `-${SIDEBAR_W}px`,
+            zIndex: 100,
+            transition: "left 0.22s cubic-bezier(0.4,0,0.2,1)",
+          } : {
+            position: "relative",
+            transition: "width 0.22s cubic-bezier(0.4,0,0.2,1), min-width 0.22s cubic-bezier(0.4,0,0.2,1)",
+          }),
           flexShrink: 0,
         }}>
           {/* Sidebar header */}
@@ -443,7 +472,7 @@ export function ChatInterface({ workspace, datasets, userId, initialSessions }: 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", minWidth: 0 }}>
 
           {/* Top bar */}
-          <div style={{
+          <div className="chat-topbar" style={{
             flexShrink: 0, display: "flex", alignItems: "center", gap: "12px",
             padding: "0 24px", height: "56px",
             borderBottom: `1px solid ${T.border}`,
@@ -485,7 +514,7 @@ export function ChatInterface({ workspace, datasets, userId, initialSessions }: 
 
           {/* Messages */}
           <div className="chat-scroll" style={{ flex: 1, overflowY: "auto", padding: "32px 0" }}>
-            <div style={{ maxWidth: "760px", margin: "0 auto", padding: "0 32px" }}>
+            <div className="chat-messages-inner">
               {loadingSession ? (
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "300px" }}>
                   <Loader2 size={22} color={T.accent} style={{ animation: "spin 1s linear infinite" }} />
@@ -511,7 +540,7 @@ export function ChatInterface({ workspace, datasets, userId, initialSessions }: 
                   </p>
 
                   {/* Suggestion grid */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", width: "100%", maxWidth: "560px" }}>
+                  <div className="chat-suggest-grid">
                     {SUGGESTED.map(({ icon: Icon, text }) => (
                       <button
                         key={text}
@@ -542,7 +571,7 @@ export function ChatInterface({ workspace, datasets, userId, initialSessions }: 
           </div>
 
           {/* ── Input bar ─────────────────────────────────────────────────── */}
-          <div style={{
+          <div className="chat-input-bar" style={{
             flexShrink: 0,
             padding: "16px 32px 20px",
             background: T.surface,
