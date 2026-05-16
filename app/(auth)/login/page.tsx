@@ -31,10 +31,10 @@ export default function LoginPage() {
   return (
     <div>
       <h1 style={{ fontSize: "28px", fontWeight: 800, color: "#0f172a", margin: "0 0 8px", letterSpacing: "-0.6px" }}>
-        Sign in
+        Log in
       </h1>
       <p style={{ fontSize: "14px", color: "#64748b", margin: "0 0 36px" }}>
-        Welcome back. Enter your credentials to continue.
+        Welcome back. Log in to go straight to your dashboard.
       </p>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -62,14 +62,14 @@ export default function LoginPage() {
 
         <button type="submit" disabled={loading} style={btnStyle(loading)}>
           {loading ? <Loader2 size={15} className="animate-spin" /> : null}
-          {loading ? "Signing in…" : "Sign in"}
+          {loading ? "Logging in…" : "Log in"}
         </button>
       </form>
 
       <p style={{ textAlign: "center", fontSize: "13.5px", color: "#94a3b8", marginTop: "28px" }}>
-        No account?{" "}
+        New to BizIntel?{" "}
         <Link href="/signup" style={{ color: "#0ea5e9", fontWeight: 600, textDecoration: "none" }}>
-          Sign up →
+          Get started →
         </Link>
       </p>
     </div>

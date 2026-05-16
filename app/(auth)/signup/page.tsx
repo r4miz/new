@@ -31,7 +31,7 @@ export default function SignupPage() {
         Create your account
       </h1>
       <p style={{ fontSize: "14px", color: "#64748b", margin: "0 0 36px" }}>
-        Analyze your business data with AI in minutes.
+        Create your account and set up your company dashboard.
       </p>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
@@ -76,7 +76,7 @@ export default function SignupPage() {
       <p style={{ textAlign: "center", fontSize: "13px", color: "#94a3b8", marginTop: "28px" }}>
         Already have an account?{" "}
         <Link href="/login" style={{ color: "#0ea5e9", fontWeight: 600, textDecoration: "none" }}>
-          Sign in
+          Log in
         </Link>
       </p>
     </div>

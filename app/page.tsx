@@ -75,7 +75,7 @@ export default function LandingPage() {
             padding: "8px 18px", borderRadius: "7px", fontSize: "14px", fontWeight: 600,
             border: `1.5px solid ${BORDER}`, color: NAVY, textDecoration: "none", background: "white",
           }}>
-            Sign in
+            Log in
           </Link>
           <Link href="/signup" style={{
             padding: "8px 18px", borderRadius: "7px", fontSize: "14px", fontWeight: 600,
@@ -141,7 +141,7 @@ export default function LandingPage() {
               padding: "14px 28px", borderRadius: "9px", textDecoration: "none",
               border: "1px solid rgba(255,255,255,0.12)",
             }}>
-              Sign in
+              Log in
             </Link>
           </div>
 
@@ -435,9 +435,10 @@ export default function LandingPage() {
             <span style={{ fontWeight: 800, fontSize: "14px", color: "#f8fafc" }}>BizIntel</span>
           </div>
           <div style={{ display: "flex", gap: "28px" }}>
-            {["Features", "Integrations", "Pricing", "Sign in"].map(l => (
-              <a key={l} href="#" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>{l}</a>
+            {["Features", "Integrations", "Pricing"].map(l => (
+              <a key={l} href={`#${l.toLowerCase()}`} style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>{l}</a>
             ))}
+            <Link href="/login" style={{ fontSize: "13px", color: "#475569", textDecoration: "none" }}>Log in</Link>
           </div>
           <p style={{ fontSize: "13px", color: "#94a3b8", margin: 0 }}>© 2025 BizIntel. All rights reserved.</p>
         </div>
